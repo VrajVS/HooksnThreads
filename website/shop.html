@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Shop — Hooks &amp; Threads</title>
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --cream: #E9E4DC; --cream-soft: #F0ECE3; --ink: #2F3456;
+  --ink-soft: #5A6079; --sage: #9CB3A2; --sage-deep: #7A9582; --rule: #D3CDBE;
+  --serif: 'Cormorant Garamond', Georgia, serif;
+  --sans: 'Jost', system-ui, sans-serif;
+  --maxw: 1200px; --gut: clamp(20px, 4vw, 48px);
+}
+*, *::before, *::after { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; background: var(--cream); color: var(--ink); font-family: var(--sans); -webkit-font-smoothing: antialiased; font-size: 16px; line-height: 1.6; }
+img { max-width: 100%; display: block; }
+a { color: inherit; text-decoration: none; }
+button { font: inherit; cursor: pointer; }
+.wrap { max-width: var(--maxw); margin: 0 auto; padding-left: var(--gut); padding-right: var(--gut); }
+
+/* ─── ANNOUNCE BAR ─── */
+.announce {
+  background: var(--ink); color: var(--cream);
+  font-size: 12px; letter-spacing: .06em; text-align: center;
+  padding: 9px 16px; font-weight: 500;
+}
+
+/* ─── HEADER ─── */
+.site-header {
+  position: sticky; top: 0; z-index: 60;
+  background: rgba(233,228,220,.9);
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--rule);
+}
+.header-inner {
+  display: flex; align-items: center; justify-content: space-between;
+  height: 72px; gap: 24px;
+}
+.brand img { height: 72px; width: auto; }
+.primary-nav { display: flex; gap: 34px; align-items: center; }
+.primary-nav a { font-size: 14px; font-weight: 500; color: var(--ink); transition: color .2s; }
+.primary-nav a:hover, .primary-nav a.active { color: var(--sage-deep); }
+.header-actions { display: flex; align-items: center; gap: 14px; }
+.icon-btn {
+  background: none; border: none; padding: 0; color: var(--ink);
+  display: flex; align-items: center; justify-content: center;
+  position: relative; transition: color .2s;
+}
+.icon-btn:hover { color: var(--sage-deep); }
+.cart-badge {
+  display: none; position: absolute; top: -7px; right: -8px;
+  min-width: 16px; height: 16px; padding: 0 4px;
+  background: var(--sage-deep); color: #fff;
+  border-radius: 999px; font-size: 10px; font-weight: 700;
+  align-items: center; justify-content: center;
+}
+.cart-badge.show { display: flex; }
+@media (max-width: 800px) { .primary-nav { display: none; } }
+
+/* ─── PAGE BANNER ─── */
+.page-banner {
+  border-bottom: 1px solid var(--rule);
+  padding: clamp(28px, 4vw, 48px) 0;
+  background: var(--cream-soft);
+}
+.breadcrumb {
+  font-size: 12px; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--ink-soft); margin: 0 0 10px; display: flex; gap: 8px; align-items: center;
+}
+.breadcrumb a { transition: color .2s; }
+.breadcrumb a:hover { color: var(--ink); }
+.breadcrumb span { opacity: .4; }
+.page-banner h1 {
+  font-family: var(--serif); font-weight: 600; color: var(--ink);
+  font-size: clamp(36px, 5vw, 60px); line-height: 1; letter-spacing: -.01em; margin: 0;
+}
+.page-banner h1 em { font-style: italic; color: var(--sage-deep); }
+.page-banner-sub {
+  font-size: 15px; color: var(--ink-soft); margin: 12px 0 0; max-width: 44ch;
+}
+
+/* ─── FILTER NAV ─── */
+.filter-nav {
+  position: sticky; top: 72px; z-index: 50;
+  background: rgba(233,228,220,.95);
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--rule);
+}
+.filter-rail {
+  display: flex; align-items: center; gap: clamp(20px, 2.4vw, 32px);
+  overflow-x: auto; scrollbar-width: none;
+  padding: 16px 0;
+  scroll-snap-type: x proximity;
+}
+.filter-rail::-webkit-scrollbar { display: none; }
+.chip {
+  flex: 0 0 auto; scroll-snap-align: start;
+  background: transparent; border: 0; padding: 4px 0;
+  font-family: var(--sans); font-size: 14px; letter-spacing: .02em;
+  font-weight: 400; color: var(--ink-soft); white-space: nowrap;
+  position: relative; transition: color .18s;
+}
+.chip:hover { color: var(--ink); }
+.chip.active { color: var(--ink); font-weight: 500; }
+.chip.active::before {
+  content: ""; display: inline-block;
+  width: 5px; height: 5px; background: var(--sage-deep);
+  transform: rotate(45deg); margin-right: 9px; vertical-align: 3px;
+}
+
+/* ─── COLLECTION SECTION ─── */
+.collection {
+  padding: clamp(48px, 6vw, 80px) 0 clamp(32px, 4vw, 56px);
+  border-top: 1px solid var(--rule);
+}
+.collection:first-of-type { border-top: none; }
+.collection-head { margin-bottom: clamp(28px, 4vw, 48px); }
+.coll-index {
+  font-size: 11px; letter-spacing: .24em; text-transform: uppercase;
+  color: var(--sage-deep); font-weight: 500; margin: 0 0 10px;
+}
+.coll-title {
+  font-family: var(--serif); font-weight: 600; color: var(--ink);
+  font-size: clamp(28px, 4vw, 48px); line-height: 1.05;
+  letter-spacing: -.01em; margin: 0;
+}
+.coll-title em { font-style: italic; color: var(--sage-deep); font-weight: 500; }
+.coll-sub {
+  font-family: var(--serif); font-size: 17px; font-style: italic;
+  color: var(--ink-soft); margin: 10px 0 0; max-width: 52ch;
+}
+
+/* ─── PRODUCT GRID ─── */
+.grid-4 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: clamp(16px, 2vw, 28px);
+}
+@media (max-width: 1024px) { .grid-4 { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 680px)  { .grid-4 { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 360px)  { .grid-4 { grid-template-columns: 1fr; } }
+
+/* ─── PRODUCT CARD ─── */
+.prod {
+  display: flex; flex-direction: column;
+  transition: transform .25s ease;
+}
+.prod:hover { transform: translateY(-3px); }
+.prod-thumb {
+  width: 100%; aspect-ratio: 4 / 5; overflow: hidden;
+  background: var(--cream-soft); border: 1px solid var(--rule);
+  border-radius: 4px; transition: border-color .25s;
+  position: relative;
+}
+.prod:hover .prod-thumb { border-color: var(--ink); }
+.prod-thumb img {
+  width: 100%; height: 100%; object-fit: cover;
+  display: block; transition: transform .5s ease;
+}
+.prod:hover .prod-thumb img { transform: scale(1.04); }
+.prod-meta {
+  padding: 12px 0 14px;
+  display: flex; justify-content: space-between; align-items: baseline;
+  gap: 12px;
+  border-bottom: 1px solid var(--rule);
+}
+.prod-name {
+  font-family: var(--serif); font-weight: 500;
+  font-size: 17px; line-height: 1.25; color: var(--ink); margin: 0;
+}
+.prod-price {
+  font-size: 13px; letter-spacing: .04em;
+  color: var(--ink-soft); white-space: nowrap; flex-shrink: 0;
+}
+
+/* ─── ORDER CTA BAND ─── */
+.order-band {
+  background: var(--ink); color: var(--cream);
+  padding: clamp(36px, 5vw, 60px) 0;
+  text-align: center;
+}
+.order-band h2 {
+  font-family: var(--serif); font-weight: 600;
+  font-size: clamp(28px, 4vw, 44px); margin: 0 0 10px; letter-spacing: -.01em;
+}
+.order-band h2 em { font-style: italic; color: var(--sage); }
+.order-band p { color: rgba(233,228,220,.75); font-size: 15px; margin: 0 0 24px; }
+.order-btns { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+.btn-cream {
+  background: var(--cream); color: var(--ink); font-weight: 600;
+  font-size: 14px; padding: 12px 24px; border-radius: 999px; border: none;
+  display: inline-flex; align-items: center; gap: 8px; transition: background .2s;
+}
+.btn-cream:hover { background: var(--cream-soft); }
+.btn-outline-cream {
+  background: transparent; color: var(--cream); font-weight: 500;
+  font-size: 14px; padding: 11px 22px; border-radius: 999px;
+  border: 1px solid rgba(233,228,220,.4);
+  display: inline-flex; align-items: center; gap: 8px; transition: border-color .2s, background .2s;
+}
+.btn-outline-cream:hover { border-color: var(--cream); background: rgba(233,228,220,.08); }
+
+/* ─── FOOTER ─── */
+.site-footer {
+  background: var(--ink); color: var(--cream);
+  padding: clamp(48px, 6vw, 80px) 0 0;
+}
+.footer-grid {
+  display: grid; grid-template-columns: 1.5fr 1fr 1fr 1fr;
+  gap: clamp(28px, 4vw, 56px); padding-bottom: clamp(40px, 5vw, 64px);
+}
+.foot-brand-logo { width: 140px; display: block; margin-bottom: 14px; }
+.foot-brand p { font-size: 14px; line-height: 1.6; color: rgba(233,228,220,.7); margin: 0 0 18px; max-width: 230px; }
+.foot-social { display: flex; gap: 10px; }
+.social-btn {
+  width: 36px; height: 36px; border-radius: 50%;
+  border: 1px solid rgba(255,255,255,.18); color: rgba(233,228,220,.7);
+  display: flex; align-items: center; justify-content: center; transition: all .2s;
+}
+.social-btn:hover { border-color: var(--sage); color: var(--sage); }
+.foot-col-label {
+  font-size: 11px; letter-spacing: .22em; text-transform: uppercase;
+  color: var(--sage); margin: 0 0 14px; font-weight: 500;
+}
+.foot-links { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.foot-links a {
+  font-family: var(--serif); font-size: 17px;
+  color: rgba(233,228,220,.8); transition: color .2s;
+}
+.foot-links a:hover { color: var(--cream); }
+.foot-base {
+  display: flex; justify-content: space-between; align-items: center;
+  border-top: 1px solid rgba(255,255,255,.1); padding: 20px 0;
+  font-size: 12px; letter-spacing: .08em; color: rgba(233,228,220,.5);
+}
+.back-top { color: rgba(233,228,220,.7); display: inline-flex; align-items: center; gap: 7px; transition: color .2s; }
+.back-top:hover { color: var(--sage); }
+@media (max-width: 860px) {
+  .footer-grid { grid-template-columns: 1fr 1fr; }
+  .foot-brand { grid-column: 1 / -1; }
+}
+@media (max-width: 480px) {
+  .footer-grid { grid-template-columns: 1fr; }
+  .foot-base { flex-direction: column; text-align: center; gap: 10px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+}
+</style>
+</head>
+<body>
+
+<!-- ─── ANNOUNCE BAR ─── -->
+<div class="announce">Handcrafted in India · Made to order · Fully customisable in your colours</div>
+
+<!-- ─── HEADER ─── -->
+<header class="site-header">
+  <div class="wrap header-inner">
+    <a class="brand" href="index.html"><img src="assets/logo.webp" alt="Hooks &amp; Threads"></a>
+    <nav class="primary-nav">
+      <a href="index.html">Home</a>
+      <a href="shop.html" class="active">Shop</a>
+      <a href="index.html#about">About</a>
+      <a href="index.html#contact">Contact</a>
+    </nav>
+    <div class="header-actions">
+      <button class="icon-btn" aria-label="Search">
+        <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<main id="top">
+
+<!-- ─── PAGE BANNER ─── -->
+<div class="page-banner">
+  <div class="wrap">
+    <p class="breadcrumb"><a href="index.html">Home</a><span>/</span>Shop</p>
+    <h1>The full <em>collection</em></h1>
+    <p class="page-banner-sub">16 collections · 130+ handmade pieces · all customisable in your colours.</p>
+  </div>
+</div>
+
+<!-- ─── FILTER NAV ─── -->
+<nav class="filter-nav" aria-label="Filter by collection">
+  <div class="wrap filter-rail" id="filter-rail">
+    <button class="chip active" data-target="flowers">Forever Flowers</button>
+    <button class="chip" data-target="festivals">Festive Specials</button>
+    <button class="chip" data-target="keychains">Keychains</button>
+    <button class="chip" data-target="bagcharms">Bag Charms</button>
+    <button class="chip" data-target="pouches">Earphone Pouches</button>
+    <button class="chip" data-target="hair">Hair Accessories</button>
+    <button class="chip" data-target="home">Home Decor</button>
+    <button class="chip" data-target="car">Car Decor</button>
+    <button class="chip" data-target="bookmarks">Bookmarks</button>
+    <button class="chip" data-target="outfit">Elevate Your Outfit</button>
+    <button class="chip" data-target="earrings">Earrings</button>
+    <button class="chip" data-target="choker">Choker</button>
+    <button class="chip" data-target="belt">Belt</button>
+    <button class="chip" data-target="tops">Tops</button>
+    <button class="chip" data-target="beach">Beachwear</button>
+    <button class="chip" data-target="phone">Phone Accessories</button>
+  </div>
+</nav>
+
+<!-- ─── COLLECTIONS ─── -->
+
+<section class="collection" id="flowers">
+  <div class="wrap">
+    <div class="collection-head">
+      <p class="coll-index">01 / 16</p>
+      <h2 class="coll-title"><em>Forever</em> Flowers</h2>
+      <p class="coll-sub">Crocheted blooms that never wilt — a quiet keepsake or a bouquet that lasts.</p>
+    </div>
+    <div class="grid-4">
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/Rose.webp" alt="Rose"></div><div class="prod-meta"><span class="prod-name">Rose</span><span class="prod-price">₹240/flower</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/Lily.webp" alt="Lily"></div><div class="prod-meta"><span class="prod-name">Lily</span><span class="prod-price">₹420/flower</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/Sunflower.webp" alt="Sunflower"></div><div class="prod-meta"><span class="prod-name">Sunflower</span><span class="prod-price">₹240/flower</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/Tulip.webp" alt="Tulip"></div><div class="prod-meta"><span class="prod-name">Tulip</span><span class="prod-price">₹180/flower</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/callalily.webp" alt="Calla Lily"></div><div class="prod-meta"><span class="prod-name">Calla Lily</span><span class="prod-price">₹180/flower</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/rosebouquet.webp" alt="Rose Bouquet"></div><div class="prod-meta"><span class="prod-name">Rose Bouquet</span><span class="prod-price">₹1200/4 flowers</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/tulipbouquet.webp" alt="Tulip Bouquet"></div><div class="prod-meta"><span class="prod-name">Tulip Bouquet</span><span class="prod-price">₹960/4 flowers</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/lilybouquet.webp" alt="Lily Bouquet"></div><div class="prod-meta"><span class="prod-name">Lily Bouquet</span><span class="prod-price">₹1920</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/sunflowerbouquet.webp" alt="Sunflower Bouquet"></div><div class="prod-meta"><span class="prod-name">Sunflower Bouquet</span><span class="prod-price">₹1680/6 flowers</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/daisylilybouquet.webp" alt="Lily – Daisy Bouquet"></div><div class="prod-meta"><span class="prod-name">Lily – Daisy Bouquet</span><span class="prod-price">₹1020/3 pieces</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/rosetuliplilybouquet.webp" alt="Rose Tulip Lily Bouquet"></div><div class="prod-meta"><span class="prod-name">Rose Tulip Lily Bouquet</span><span class="prod-price">₹1320/4 flowers</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/rosetulipbouquet.webp" alt="Rose Tulip Bouquet"></div><div class="prod-meta"><span class="prod-name">Rose Tulip Bouquet</span><span class="prod-price">₹1320/5 flowers</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/sunflowerpot.webp" alt="Sunflower Pot"></div><div class="prod-meta"><span class="prod-name">Sunflower Pot</span><span class="prod-price">₹360</span></div></div>
+    </div>
+  </div>
+</section>
+
+<section class="collection" id="festivals">
+  <div class="wrap">
+    <div class="collection-head">
+      <p class="coll-index">02 / 16</p>
+      <h2 class="coll-title"><em>Festive</em> Specials</h2>
+      <p class="coll-sub">Crocheted pieces that make every festival a little more special.</p>
+    </div>
+    <div class="grid-4">
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/toran.webp" alt="Toran"></div><div class="prod-meta"><span class="prod-name">Toran</span><span class="prod-price">₹3600</span></div></div>
+    </div>
+  </div>
+</section>
+
+<section class="collection" id="keychains">
+  <div class="wrap">
+    <div class="collection-head">
+      <p class="coll-index">03 / 16</p>
+      <h2 class="coll-title">Keychains</h2>
+      <p class="coll-sub">Pocket-sized companions. Clip one to a bag, a satchel, or a set of keys.</p>
+    </div>
+    <div class="grid-4">
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/bow.webp" alt="Bow"></div><div class="prod-meta"><span class="prod-name">Bow</span><span class="prod-price">₹180</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/donut.webp" alt="Donut"></div><div class="prod-meta"><span class="prod-name">Donut</span><span class="prod-price">₹180</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/evileye.webp" alt="Evil Eye"></div><div class="prod-meta"><span class="prod-name">Evil Eye</span><span class="prod-price">₹180</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/rosekeychain.webp" alt="Rose"></div><div class="prod-meta"><span class="prod-name">Rose</span><span class="prod-price">₹180</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/sunflowerkeychain.webp" alt="Sunflower"></div><div class="prod-meta"><span class="prod-name">Sunflower</span><span class="prod-price">₹180</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/snowflakekeychain.webp" alt="Snowflake"></div><div class="prod-meta"><span class="prod-name">Snowflake</span><span class="prod-price">₹180</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/minibouquet.webp" alt="Flower Bouquet"></div><div class="prod-meta"><span class="prod-name">Flower Bouquet</span><span class="prod-price">₹180</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/daisykeychain.webp" alt="Daisy"></div><div class="prod-meta"><span class="prod-name">Daisy</span><span class="prod-price">₹180</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/Avocado.webp" alt="Avocado"></div><div class="prod-meta"><span class="prod-name">Avocado</span><span class="prod-price">₹180</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/Octopus.webp" alt="Octopus"></div><div class="prod-meta"><span class="prod-name">Octopus</span><span class="prod-price">₹180</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/square.webp" alt="Stuffed Square"></div><div class="prod-meta"><span class="prod-name">Stuffed Square</span><span class="prod-price">₹180</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/hexagon.webp" alt="Stuffed Hexagon"></div><div class="prod-meta"><span class="prod-name">Stuffed Hexagon</span><span class="prod-price">₹180</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/twindaisy.webp" alt="Twin Daisies"></div><div class="prod-meta"><span class="prod-name">Twin Daisies</span><span class="prod-price">₹180</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/twinstrawberrydaisy.webp" alt="Twin Daisies w/ Strawberries"></div><div class="prod-meta"><span class="prod-name">Twin Daisies w/ Strawberries</span><span class="prod-price">₹180</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/rainbowkeychain.webp" alt="Rainbow"></div><div class="prod-meta"><span class="prod-name">Rainbow</span><span class="prod-price">₹180</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/heartkeychain.webp" alt="Heart Keychain"></div><div class="prod-meta"><span class="prod-name">Heart Keychain</span><span class="prod-price">₹180</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/minion.webp" alt="Minion"></div><div class="prod-meta"><span class="prod-name">Minion</span><span class="prod-price">₹600</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/honeybee.webp" alt="Honeybee Keychain"></div><div class="prod-meta"><span class="prod-name">Honeybee Keychain</span><span class="prod-price">₹500</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/pikachukeychain.webp" alt="Pikachu Keychain"></div><div class="prod-meta"><span class="prod-name">Pikachu Keychain</span><span class="prod-price">₹600</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/batmankeychain.webp" alt="Batman Keychain"></div><div class="prod-meta"><span class="prod-name">Batman Keychain</span><span class="prod-price">₹600</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/pandakeychain.webp" alt="Panda Keychain"></div><div class="prod-meta"><span class="prod-name">Panda Keychain</span><span class="prod-price">₹600</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/dreamcatcherkeychain.webp" alt="Dreamcatcher Keychain"></div><div class="prod-meta"><span class="prod-name">Dreamcatcher Keychain</span><span class="prod-price">₹120</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/damru.webp" alt="Damru Keychain"></div><div class="prod-meta"><span class="prod-name">Damru Keychain</span><span class="prod-price">₹180</span></div></div>
+    </div>
+  </div>
+</section>
+
+<section class="collection" id="bagcharms">
+  <div class="wrap">
+    <div class="collection-head">
+      <p class="coll-index">04 / 16</p>
+      <h2 class="coll-title">Bag Charms</h2>
+      <p class="coll-sub">A small flourish that makes the everyday tote feel a little more yours.</p>
+    </div>
+    <div class="grid-4">
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/rainbowbagcharm.webp" alt="Rainbow"></div><div class="prod-meta"><span class="prod-name">Rainbow</span><span class="prod-price">₹180</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/star.webp" alt="Star"></div><div class="prod-meta"><span class="prod-name">Star</span><span class="prod-price">₹180</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/strawberrydaisy.webp" alt="Strawberries &amp; Daisies"></div><div class="prod-meta"><span class="prod-name">Strawberries &amp; Daisies</span><span class="prod-price">₹300</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/donutbagcharm.webp" alt="Donut"></div><div class="prod-meta"><span class="prod-name">Donut</span><span class="prod-price">₹180</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/sunflowerbagcharm.webp" alt="Sunflower"></div><div class="prod-meta"><span class="prod-name">Sunflower</span><span class="prod-price">₹180</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/rosebagcharm.webp" alt="Rose"></div><div class="prod-meta"><span class="prod-name">Rose</span><span class="prod-price">₹180</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/stuffedflower.webp" alt="Stuffed Flower"></div><div class="prod-meta"><span class="prod-name">Stuffed Flower</span><span class="prod-price">₹180</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/honeybeedaisy.webp" alt="Honeybee &amp; Daisy"></div><div class="prod-meta"><span class="prod-name">Honeybee &amp; Daisy</span><span class="prod-price">₹360</span></div></div>
+    </div>
+  </div>
+</section>
+
+<section class="collection" id="pouches">
+  <div class="wrap">
+    <div class="collection-head">
+      <p class="coll-index">05 / 16</p>
+      <h2 class="coll-title">Earphone Pouches</h2>
+      <p class="coll-sub">A soft little home for your buds. Drawstring closure, fully lined.</p>
+    </div>
+    <div class="grid-4">
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/heartpouch.webp" alt="Heart Pouch"></div><div class="prod-meta"><span class="prod-name">Heart Pouch</span><span class="prod-price">₹240</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/sunflowerearphone.webp" alt="Sunflower Pouch"></div><div class="prod-meta"><span class="prod-name">Sunflower Pouch</span><span class="prod-price">₹240</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/kittypouch.webp" alt="Kitty Pouch"></div><div class="prod-meta"><span class="prod-name">Kitty Pouch</span><span class="prod-price">₹240</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/butterflypouch.webp" alt="Butterfly Pouch"></div><div class="prod-meta"><span class="prod-name">Butterfly Pouch</span><span class="prod-price">₹240</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/evileyepouch.webp" alt="Evil Eye Pouch"></div><div class="prod-meta"><span class="prod-name">Evil Eye Pouch</span><span class="prod-price">₹240</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/squarepouch.webp" alt="Square Pouch"></div><div class="prod-meta"><span class="prod-name">Square Pouch</span><span class="prod-price">₹240</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/flowerpouch.webp" alt="Flower Pouch"></div><div class="prod-meta"><span class="prod-name">Flower Pouch</span><span class="prod-price">₹240</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/fishpouch.webp" alt="Fish Pouch"></div><div class="prod-meta"><span class="prod-name">Fish Pouch</span><span class="prod-price">₹240</span></div></div>
+    </div>
+  </div>
+</section>
+
+<section class="collection" id="hair">
+  <div class="wrap">
+    <div class="collection-head">
+      <p class="coll-index">06 / 16</p>
+      <h2 class="coll-title">Hair Accessories</h2>
+      <p class="coll-sub">From traditional gajras to soft scrunchies and clips — sixteen ways to dress your hair.</p>
+    </div>
+    <div class="grid-4">
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/gajra.webp" alt="Gajra"></div><div class="prod-meta"><span class="prod-name">Gajra</span><span class="prod-price">₹360</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/rosegajra.webp" alt="Rose Gajra"></div><div class="prod-meta"><span class="prod-name">Rose Gajra</span><span class="prod-price">₹360</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/sunflowergajra.webp" alt="Sunflower Gajra"></div><div class="prod-meta"><span class="prod-name">Sunflower Gajra</span><span class="prod-price">₹360</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/buckethat.webp" alt="Bucket Hat"></div><div class="prod-meta"><span class="prod-name">Bucket Hat</span><span class="prod-price">₹1500</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/scrunchie.webp" alt="Scrunchie"></div><div class="prod-meta"><span class="prod-name">Scrunchie</span><span class="prod-price">₹160</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/rosehairtie.webp" alt="Rose Hairtie"></div><div class="prod-meta"><span class="prod-name">Rose Hairtie</span><span class="prod-price">₹160</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/sunflowerhairtie.webp" alt="Sunflower Hairtie"></div><div class="prod-meta"><span class="prod-name">Sunflower Hairtie</span><span class="prod-price">₹120</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/bowhairtie.webp" alt="Bow Hairtie"></div><div class="prod-meta"><span class="prod-name">Bow Hairtie</span><span class="prod-price">₹120</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/flowerhairtie.webp" alt="Flower Hairtie"></div><div class="prod-meta"><span class="prod-name">Flower Hairtie</span><span class="prod-price">₹75</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/hearthairclip.webp" alt="Heart Hairclip"></div><div class="prod-meta"><span class="prod-name">Heart Hairclip</span><span class="prod-price">₹90</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/meshbowhairclip.webp" alt="Mesh Bow Hairclip"></div><div class="prod-meta"><span class="prod-name">Mesh Bow Hairclip</span><span class="prod-price">₹150</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/daisyhairclip.webp" alt="Daisy Hairclip"></div><div class="prod-meta"><span class="prod-name">Daisy Hairclip</span><span class="prod-price">₹85</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/strawberryhairclip.webp" alt="Strawberry Hairclip"></div><div class="prod-meta"><span class="prod-name">Strawberry Hairclip</span><span class="prod-price">₹420</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/chunkyhairband.webp" alt="Chunky Hairband"></div><div class="prod-meta"><span class="prod-name">Chunky Hairband</span><span class="prod-price">₹540</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/floralhairband.webp" alt="Floral Hairband"></div><div class="prod-meta"><span class="prod-name">Floral Hairband</span><span class="prod-price">₹540</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/paranda.webp" alt="Paranda"></div><div class="prod-meta"><span class="prod-name">Paranda</span><span class="prod-price">₹540</span></div></div>
+    </div>
+  </div>
+</section>
+
+<section class="collection" id="home">
+  <div class="wrap">
+    <div class="collection-head">
+      <p class="coll-index">07 / 16</p>
+      <h2 class="coll-title">Home Decor</h2>
+      <p class="coll-sub">Soft touches for shelves, tables and doorways — quietly handmade.</p>
+    </div>
+    <div class="grid-4">
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/coaster.webp" alt="Coaster"></div><div class="prod-meta"><span class="prod-name">Coaster</span><span class="prod-price">₹80</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/wafflecoaster.webp" alt="Waffle Coaster"></div><div class="prod-meta"><span class="prod-name">Waffle Coaster</span><span class="prod-price">₹140</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/teacoaster.webp" alt="Tea / Coffee Coaster"></div><div class="prod-meta"><span class="prod-name">Tea / Coffee Coaster</span><span class="prod-price">₹120</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/cactuscoaster.webp" alt="Cactus Coaster"></div><div class="prod-meta"><span class="prod-name">Cactus Coaster</span><span class="prod-price">₹1000</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/scratcoaster.webp" alt="Scrat Coaster"></div><div class="prod-meta"><span class="prod-name">Scrat Coaster</span><span class="prod-price">₹400</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/jarcover.webp" alt="Jar Cover"></div><div class="prod-meta"><span class="prod-name">Jar Cover</span><span class="prod-price">₹1200</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/windspinner.webp" alt="Wind Spinner"></div><div class="prod-meta"><span class="prod-name">Wind Spinner</span><span class="prod-price">₹600</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/tablerunner.webp" alt="Table Runner"></div><div class="prod-meta"><span class="prod-name">Table Runner</span><span class="prod-price">₹950</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/sunflowermirror.webp" alt="Sunflower Mirror"></div><div class="prod-meta"><span class="prod-name">Sunflower Mirror</span><span class="prod-price">₹2400</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/cushion.webp" alt="Cushion"></div><div class="prod-meta"><span class="prod-name">Cushion</span><span class="prod-price">₹1200</span></div></div>
+    </div>
+  </div>
+</section>
+
+<section class="collection" id="car">
+  <div class="wrap">
+    <div class="collection-head">
+      <p class="coll-index">08 / 16</p>
+      <h2 class="coll-title">Car Decor</h2>
+      <p class="coll-sub">A little personality for the rear-view mirror.</p>
+    </div>
+    <div class="grid-4">
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/donutcar.webp" alt="Donut Car Hanging"></div><div class="prod-meta"><span class="prod-name">Donut Car Hanging</span><span class="prod-price">₹600</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/butterflycar.webp" alt="Butterfly Car Hanging"></div><div class="prod-meta"><span class="prod-name">Butterfly Car Hanging</span><span class="prod-price">₹600</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/damrucar.webp" alt="Damru Car Hanging"></div><div class="prod-meta"><span class="prod-name">Damru Car Hanging</span><span class="prod-price">₹600</span></div></div>
+    </div>
+  </div>
+</section>
+
+<section class="collection" id="bookmarks">
+  <div class="wrap">
+    <div class="collection-head">
+      <p class="coll-index">09 / 16</p>
+      <h2 class="coll-title">Bookmarks</h2>
+      <p class="coll-sub">For the reader who likes a soft thread between chapters.</p>
+    </div>
+    <div class="grid-4">
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/daisybookmark.webp" alt="Daisy Bookmark"></div><div class="prod-meta"><span class="prod-name">Daisy Bookmark</span><span class="prod-price">₹75</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/sunflowerbookmark.webp" alt="Sunflower Bookmark"></div><div class="prod-meta"><span class="prod-name">Sunflower Bookmark</span><span class="prod-price">₹75</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/featherbookmark.webp" alt="Feather Bookmark"></div><div class="prod-meta"><span class="prod-name">Feather Bookmark</span><span class="prod-price">₹150</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/teacupbookmark.webp" alt="Tea / Coffee Bookmark"></div><div class="prod-meta"><span class="prod-name">Tea / Coffee Bookmark</span><span class="prod-price">₹75</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/butterflybookmark.webp" alt="Butterfly Bookmark"></div><div class="prod-meta"><span class="prod-name">Butterfly Bookmark</span><span class="prod-price">₹120</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/snowflake.webp" alt="Snowflake Bookmark"></div><div class="prod-meta"><span class="prod-name">Snowflake Bookmark</span><span class="prod-price">₹100</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/thongbookmark.webp" alt="Thong Bookmark"></div><div class="prod-meta"><span class="prod-name">Thong Bookmark</span><span class="prod-price">₹240</span></div></div>
+    </div>
+  </div>
+</section>
+
+<section class="collection" id="outfit">
+  <div class="wrap">
+    <div class="collection-head">
+      <p class="coll-index">10 / 16</p>
+      <h2 class="coll-title"><em>Elevate</em> Your Outfit</h2>
+      <p class="coll-sub">Bags, accents and buttons that finish the look.</p>
+    </div>
+    <div class="grid-4">
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/batwa.webp" alt="Batwa"></div><div class="prod-meta"><span class="prod-name">Batwa</span><span class="prod-price">₹1300</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/pineapplebatwa.webp" alt="Pineapple Batwa"></div><div class="prod-meta"><span class="prod-name">Pineapple Batwa</span><span class="prod-price">₹1800</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/squarebasebatwa.webp" alt="Square Base Batwa"></div><div class="prod-meta"><span class="prod-name">Square Base Batwa</span><span class="prod-price">₹1800</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/beachtote.webp" alt="Beach Tote Bag"></div><div class="prod-meta"><span class="prod-name">Beach Tote Bag</span><span class="prod-price">₹1500</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/sunflowertote.webp" alt="Sunflower Tote Bag"></div><div class="prod-meta"><span class="prod-name">Sunflower Tote Bag</span><span class="prod-price">₹2100</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/shoulderbag.webp" alt="Shoulder Bag"></div><div class="prod-meta"><span class="prod-name">Shoulder Bag</span><span class="prod-price">₹1500</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/valentinesbag.webp" alt="Valentine's Shoulder Bag"></div><div class="prod-meta"><span class="prod-name">Valentine's Shoulder Bag</span><span class="prod-price">₹1500</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/specsstring.webp" alt="Specs String"></div><div class="prod-meta"><span class="prod-name">Specs String</span><span class="prod-price">₹180</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/flowerbuttons.webp" alt="Flower Buttons"></div><div class="prod-meta"><span class="prod-name">Flower Buttons</span><span class="prod-price">₹35</span></div></div>
+    </div>
+  </div>
+</section>
+
+<section class="collection" id="earrings">
+  <div class="wrap">
+    <div class="collection-head">
+      <p class="coll-index">11 / 16</p>
+      <h2 class="coll-title">Earrings</h2>
+      <p class="coll-sub">Featherlight stitched florals. Nickel-free hooks.</p>
+    </div>
+    <div class="grid-4">
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/sakuraearring.webp" alt="Sakura Earring"></div><div class="prod-meta"><span class="prod-name">Sakura Earring</span><span class="prod-price">₹120</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/flowerearring.webp" alt="Flower Earring"></div><div class="prod-meta"><span class="prod-name">Flower Earring</span><span class="prod-price">₹120</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/roseearring.webp" alt="Rose Earring"></div><div class="prod-meta"><span class="prod-name">Rose Earring</span><span class="prod-price">₹120</span></div></div>
+    </div>
+  </div>
+</section>
+
+<section class="collection" id="choker">
+  <div class="wrap">
+    <div class="collection-head">
+      <p class="coll-index">12 / 16</p>
+      <h2 class="coll-title">Choker</h2>
+      <p class="coll-sub">One piece. Adjustable tie-back ribbon.</p>
+    </div>
+    <div class="grid-4">
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/rosechoker.webp" alt="Rose Choker"></div><div class="prod-meta"><span class="prod-name">Rose Choker</span><span class="prod-price">₹500</span></div></div>
+    </div>
+  </div>
+</section>
+
+<section class="collection" id="belt">
+  <div class="wrap">
+    <div class="collection-head">
+      <p class="coll-index">13 / 16</p>
+      <h2 class="coll-title">Belt</h2>
+      <p class="coll-sub">Wide-weave belts that sit softly on the waist.</p>
+    </div>
+    <div class="grid-4">
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/chunkybelt.webp" alt="Chunky Belt"></div><div class="prod-meta"><span class="prod-name">Chunky Belt</span><span class="prod-price">₹750</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/floralbelt.webp" alt="Floral Belt"></div><div class="prod-meta"><span class="prod-name">Floral Belt</span><span class="prod-price">₹750</span></div></div>
+    </div>
+  </div>
+</section>
+
+<section class="collection" id="tops">
+  <div class="wrap">
+    <div class="collection-head">
+      <p class="coll-index">14 / 16</p>
+      <h2 class="coll-title">Tops</h2>
+      <p class="coll-sub">Crochet patches and full-make tees, sized to order.</p>
+    </div>
+    <div class="grid-4">
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/tshirt.webp" alt="T-shirt"></div><div class="prod-meta"><span class="prod-name">T-shirt</span><span class="prod-price">₹2400</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/tictactoe.webp" alt="Tic Tac Toe T-shirt"></div><div class="prod-meta"><span class="prod-name">Tic Tac Toe T-shirt</span><span class="prod-price">₹720</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/pocketsunshine.webp" alt="Pocket Sunshine T-shirt"></div><div class="prod-meta"><span class="prod-name">Pocket Sunshine T-shirt</span><span class="prod-price">₹720</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/flowertshirt.webp" alt="Flower T-shirt"></div><div class="prod-meta"><span class="prod-name">Flower T-shirt</span><span class="prod-price">₹720</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/babyfrock.webp" alt="Baby Frock"></div><div class="prod-meta"><span class="prod-name">Baby Frock</span><span class="prod-price">₹2400</span></div></div>
+    </div>
+  </div>
+</section>
+
+<section class="collection" id="beach">
+  <div class="wrap">
+    <div class="collection-head">
+      <p class="coll-index">15 / 16</p>
+      <h2 class="coll-title">Beachwear</h2>
+      <p class="coll-sub">Light, open-stitch silhouettes for warm days by water.</p>
+    </div>
+    <div class="grid-4">
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/backlesstop.webp" alt="Backless Top"></div><div class="prod-meta"><span class="prod-name">Backless Top</span><span class="prod-price">₹1800</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/bikiniset.webp" alt="Bikini Set"></div><div class="prod-meta"><span class="prod-name">Bikini Set</span><span class="prod-price">₹1560</span></div></div>
+    </div>
+  </div>
+</section>
+
+<section class="collection" id="phone">
+  <div class="wrap">
+    <div class="collection-head">
+      <p class="coll-index">16 / 16</p>
+      <h2 class="coll-title">Phone Accessories</h2>
+      <p class="coll-sub">A cover and a few charms for the most-used object you own.</p>
+    </div>
+    <div class="grid-4">
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/sakuraphonecover.webp" alt="Sakura Phone Cover"></div><div class="prod-meta"><span class="prod-name">Sakura Phone Cover</span><span class="prod-price">₹420</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/seaphonecover.webp" alt="Sea Shades Phone Cover"></div><div class="prod-meta"><span class="prod-name">Sea Shades Phone Cover</span><span class="prod-price">₹420</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/sunflowerphonecover.webp" alt="Sunflower Phone Cover"></div><div class="prod-meta"><span class="prod-name">Sunflower Phone Cover</span><span class="prod-price">₹420</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/heartphonecover.webp" alt="Heart Phone Cover"></div><div class="prod-meta"><span class="prod-name">Heart Phone Cover</span><span class="prod-price">₹420</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/daisyphonecover.webp" alt="Daisy Phone Cover"></div><div class="prod-meta"><span class="prod-name">Daisy Phone Cover</span><span class="prod-price">₹420</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/bowphonecover.webp" alt="Bow Phone Cover"></div><div class="prod-meta"><span class="prod-name">Bow Phone Cover</span><span class="prod-price">₹420</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/cherryphonecover.webp" alt="Cherry Phone Cover"></div><div class="prod-meta"><span class="prod-name">Cherry Phone Cover</span><span class="prod-price">₹420</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/rosephonecover.webp" alt="Rose Phone Cover"></div><div class="prod-meta"><span class="prod-name">Rose Phone Cover</span><span class="prod-price">₹420</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/tulipphonecover.webp" alt="Tulip Phone Cover"></div><div class="prod-meta"><span class="prod-name">Tulip Phone Cover</span><span class="prod-price">₹420</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/minniemousephonecover.webp" alt="Minnie Mouse Phone Cover"></div><div class="prod-meta"><span class="prod-name">Minnie Mouse Phone Cover</span><span class="prod-price">₹420</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/bunnyphonecover.webp" alt="Bunny Phone Cover"></div><div class="prod-meta"><span class="prod-name">Bunny Phone Cover</span><span class="prod-price">₹420</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/candyrollphonecharm.webp" alt="Candy Roll Phone Charm"></div><div class="prod-meta"><span class="prod-name">Candy Roll Phone Charm</span><span class="prod-price">₹60</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/bowphonecharm.webp" alt="Bow Phone Charm"></div><div class="prod-meta"><span class="prod-name">Bow Phone Charm</span><span class="prod-price">₹60</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/flowerphonecharm.webp" alt="Flower Phone Charm"></div><div class="prod-meta"><span class="prod-name">Flower Phone Charm</span><span class="prod-price">₹60</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/sunflowerphonecharm.webp" alt="Sunflower Phone Charm"></div><div class="prod-meta"><span class="prod-name">Sunflower Phone Charm</span><span class="prod-price">₹60</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/heartphonecharm.webp" alt="Heart Phone Charm"></div><div class="prod-meta"><span class="prod-name">Heart Phone Charm</span><span class="prod-price">₹60</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/starphonecharm.webp" alt="Star Phone Charm"></div><div class="prod-meta"><span class="prod-name">Star Phone Charm</span><span class="prod-price">₹60</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/strawberryphonecharm.webp" alt="Strawberry Phone Charm"></div><div class="prod-meta"><span class="prod-name">Strawberry Phone Charm</span><span class="prod-price">₹90</span></div></div>
+      <div class="prod"><div class="prod-thumb"><img loading="lazy" src="assets/cherryphonecharm.webp" alt="Cherry Phone Charm"></div><div class="prod-meta"><span class="prod-name">Cherry Phone Charm</span><span class="prod-price">₹90</span></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── ORDER CTA ─── -->
+<div class="order-band">
+  <div class="wrap">
+    <h2>Ready to order something <em>beautiful?</em></h2>
+    <p>Every piece is made to order — send a message on Instagram or WhatsApp with your pick and preferred colours.</p>
+    <div class="order-btns">
+      <a class="btn-cream" href="https://www.instagram.com/hooksnthreads_official/" target="_blank" rel="noopener noreferrer">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="17" height="17" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r="1.1" fill="currentColor" stroke="none"/></svg>
+        DM on Instagram
+      </a>
+      <a class="btn-outline-cream" href="https://wa.me/916359069699" target="_blank" rel="noopener noreferrer">
+        WhatsApp us
+      </a>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<!-- ─── FOOTER ─── -->
+<footer class="site-footer" id="contact">
+  <div class="wrap">
+    <div class="footer-grid">
+      <div class="foot-brand">
+        <img class="foot-brand-logo" src="assets/logo-inverted.webp" alt="Hooks &amp; Threads">
+        <p>Handmade crochet flowers, keychains, bag charms &amp; more. Made to order in India.</p>
+        <div class="foot-social">
+          <a class="social-btn" href="https://www.instagram.com/hooksnthreads_official/" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3.5" y="3.5" width="17" height="17" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r="1.1" fill="currentColor" stroke="none"/></svg>
+          </a>
+          <a class="social-btn" href="https://hooksnthreads.shop/" target="_blank" rel="noopener noreferrer" aria-label="Website">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          </a>
+          <a class="social-btn" href="tel:+916359069699" aria-label="Phone">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3.1-8.7A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.2.9.4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.5c.9.3 1.9.5 2.8.7A2 2 0 0 1 22 16.9z"/></svg>
+          </a>
+        </div>
+      </div>
+      <div>
+        <p class="foot-col-label">Collections</p>
+        <ul class="foot-links">
+          <li><a href="#flowers">Forever Flowers</a></li>
+          <li><a href="#keychains">Keychains</a></li>
+          <li><a href="#bagcharms">Bag Charms</a></li>
+          <li><a href="#hair">Hair Accessories</a></li>
+          <li><a href="#home">Home Decor</a></li>
+        </ul>
+      </div>
+      <div>
+        <p class="foot-col-label">More</p>
+        <ul class="foot-links">
+          <li><a href="#outfit">Elevate Your Outfit</a></li>
+          <li><a href="#phone">Phone Accessories</a></li>
+          <li><a href="#bookmarks">Bookmarks</a></li>
+          <li><a href="#beach">Beachwear</a></li>
+          <li><a href="#car">Car Decor</a></li>
+        </ul>
+      </div>
+      <div>
+        <p class="foot-col-label">Get in touch</p>
+        <ul class="foot-links">
+          <li><a href="tel:+916359069699">+91 6359069699</a></li>
+          <li><a href="https://www.instagram.com/hooksnthreads_official/" target="_blank" rel="noopener noreferrer">@hooksnthreads_official</a></li>
+          <li><a href="https://hooksnthreads.shop/" target="_blank" rel="noopener noreferrer">hooksnthreads.shop</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot-base">
+      <span>© 2026 Hooks &amp; Threads. Handmade with love by Hetvi Shah.</span>
+      <a class="back-top" href="#top">Back to top <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V6M6 11l6-6 6 6"/></svg></a>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function () {
+  const chips = document.querySelectorAll('.chip');
+  const sections = document.querySelectorAll('.collection');
+  const filterNav = document.querySelector('.filter-nav');
+  const rail = document.getElementById('filter-rail');
+
+  const headerH = () => document.querySelector('.site-header').offsetHeight;
+  const navH = () => filterNav.offsetHeight;
+
+  /* ─── chip click → smooth scroll to section ─── */
+  chips.forEach(chip => {
+    chip.addEventListener('click', () => {
+      const target = document.getElementById(chip.dataset.target);
+      if (!target) return;
+      const y = target.getBoundingClientRect().top + window.scrollY - headerH() - navH() - 12;
+      window.scrollTo({ top: y, behavior: 'smooth' });
+    });
+  });
+
+  /* ─── scrollspy ─── */
+  function updateActive() {
+    const probe = headerH() + navH() + 60;
+    let current = null;
+    for (const s of sections) {
+      const r = s.getBoundingClientRect();
+      if (r.top <= probe && r.bottom > probe) { current = s.id; break; }
+    }
+    chips.forEach(c => {
+      const active = c.dataset.target === current;
+      c.classList.toggle('active', active);
+      if (active) {
+        const cr = c.getBoundingClientRect();
+        const rr = rail.getBoundingClientRect();
+        if (cr.left < rr.left + 20) rail.scrollBy({ left: cr.left - rr.left - 24, behavior: 'smooth' });
+        else if (cr.right > rr.right - 20) rail.scrollBy({ left: cr.right - rr.right + 24, behavior: 'smooth' });
+      }
+    });
+  }
+
+  window.addEventListener('scroll', updateActive, { passive: true });
+  window.addEventListener('resize', updateActive);
+  updateActive();
+
+  /* ─── smooth-scroll all anchor links ─── */
+  document.querySelectorAll('a[href^="#"]').forEach(a => {
+    a.addEventListener('click', e => {
+      const id = a.getAttribute('href');
+      if (id.length < 2) return;
+      const target = document.querySelector(id);
+      if (!target) return;
+      e.preventDefault();
+      const y = target.getBoundingClientRect().top + window.scrollY - headerH() - navH() - 12;
+      window.scrollTo({ top: y, behavior: 'smooth' });
+    });
+  });
+})();
+</script>
+</body>
+</html>
