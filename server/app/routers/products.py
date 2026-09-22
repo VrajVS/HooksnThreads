@@ -6,7 +6,9 @@ from app.db import get_conn
 
 router = APIRouter(prefix="/api/products", tags=["products"])
 
-SELECT_COLUMNS = "handle, title, price, image_url AS image, category_slug AS category, featured"
+SELECT_COLUMNS = (
+    "handle, title, price, image_url AS image, category_slug AS category, featured, created_at"
+)
 
 
 @router.get("")

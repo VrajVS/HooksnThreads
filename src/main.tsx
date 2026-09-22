@@ -6,6 +6,7 @@ import './index.css'
 import App from './App.tsx'
 import { CartProvider } from '@/context/cart-context'
 import { WishlistProvider } from '@/context/wishlist-context'
+import { CompareProvider } from '@/context/compare-context'
 import { AuthProvider } from '@/context/auth-context'
 import { AdminAuthProvider } from '@/context/admin-auth-context'
 
@@ -16,8 +17,10 @@ createRoot(document.getElementById('root')!).render(
         <AdminAuthProvider>
           <CartProvider>
             <WishlistProvider>
-              <App />
-              <Toaster position="top-right" richColors />
+              <CompareProvider>
+                <App />
+                <Toaster position="top-right" richColors />
+              </CompareProvider>
             </WishlistProvider>
           </CartProvider>
         </AdminAuthProvider>

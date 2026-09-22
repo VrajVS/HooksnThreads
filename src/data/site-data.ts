@@ -46,7 +46,7 @@ export const navLinks = [
   { label: "Hair Accessories", href: "/category/hair-accessories" },
   { label: "Home Decor", href: "/category/home-decor" },
   { label: "Earrings", href: "/category/earrings" },
-  { label: "More", href: "/#products" },
+  { label: "Shop All", href: "/products" },
 ];
 
 export interface Product {
@@ -56,6 +56,7 @@ export interface Product {
   image: string;
   category: string;
   featured?: boolean;
+  created_at?: string;
 }
 
 export const products: Product[] = [

@@ -1,14 +1,16 @@
-import { useState } from "react";
-import { useParams, Link } from "react-router-dom";
-import { Heart, Minus, Palette, Plus, Truck } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useParams, Link, useNavigate } from "react-router-dom";
+import { ArrowLeft, Heart, Minus, Palette, Plus, Truck } from "lucide-react";
 
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { Button } from "@/components/ui/button";
 import { GradientButton } from "@/components/gradient-button";
+import { RecentlyViewed } from "@/components/recently-viewed";
 import { useCart } from "@/context/cart-context";
 import { useWishlist } from "@/context/wishlist-context";
 import { useProduct } from "@/hooks/use-product";
+import { useRecentlyViewed } from "@/hooks/use-recently-viewed";
 import { INSTAGRAM_URL } from "@/data/site-data";
 import { cn } from "@/lib/utils";
 
@@ -20,11 +22,24 @@ const features = [
 
 export function ProductPage() {
   const { handle } = useParams();
+  const navigate = useNavigate();
   const { product, loading, notFound } = useProduct(handle);
   const { addItem } = useCart();
   const { isWishlisted, toggleWishlist } = useWishlist();
+  const { track } = useRecentlyViewed();
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
+
+  function goBack() {
+    // Use browser history when we came from within the app; otherwise
+    // fall back to the shop landing so the button always does something.
+    if (window.history.length > 1) navigate(-1);
+    else navigate("/products");
+  }
+
+  useEffect(() => {
+    if (product?.handle) track(product.handle);
+  }, [product?.handle, track]);
 
   if (notFound) {
     return (
@@ -56,7 +71,16 @@ export function ProductPage() {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      <main className="container grid gap-12 py-16 lg:grid-cols-2 lg:gap-16">
+      <div className="container pt-8">
+        <button
+          onClick={goBack}
+          className="inline-flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back
+        </button>
+      </div>
+      <main className="container grid gap-12 pb-16 pt-8 lg:grid-cols-2 lg:gap-16">
         <img
           src={product.image}
           alt={product.title}
@@ -152,6 +176,7 @@ export function ProductPage() {
           </div>
         </div>
       </main>
+      <RecentlyViewed excludeHandle={product.handle} />
       <Footer />
     </div>
   );
