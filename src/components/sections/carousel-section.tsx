@@ -34,7 +34,10 @@ function CarouselCardTile({ card }: { card: CarouselCard }) {
 
 export function CarouselSection() {
   const [index, setIndex] = useState(0);
-  const count = carouselCards.length;
+  // The first card is pinned to the left tile, so the right-side carousel
+  // rotates through the rest — avoids showing the same card in both slots.
+  const rotating = carouselCards.slice(1);
+  const count = rotating.length;
 
   const goTo = (i: number) => setIndex((i + count) % count);
 
@@ -49,7 +52,7 @@ export function CarouselSection() {
               className="flex transition-transform duration-500 ease-out"
               style={{ transform: `translateX(-${index * 100}%)` }}
             >
-              {carouselCards.map((card) => (
+              {rotating.map((card) => (
                 <div key={card.title} className="w-full shrink-0">
                   <CarouselCardTile card={card} />
                 </div>
@@ -73,7 +76,7 @@ export function CarouselSection() {
           </button>
 
           <div className="absolute inset-x-0 bottom-6 flex items-center justify-center gap-2">
-            {carouselCards.map((card, i) => (
+            {rotating.map((card, i) => (
               <button
                 key={card.title}
                 aria-label={`Go to slide ${i + 1}`}
