@@ -61,6 +61,7 @@ interface Props {
   subtitle?: string;
   products: Product[];
   loading: boolean;
+  error?: string | null;
   emptyLabel?: string;
 }
 
@@ -69,6 +70,7 @@ export function ProductListing({
   subtitle,
   products,
   loading,
+  error,
   emptyLabel = "No pieces to show",
 }: Props) {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -337,6 +339,8 @@ export function ProductListing({
 
             {loading ? (
               <GridSkeleton view={view} />
+            ) : error ? (
+              <ErrorState message={error} />
             ) : shown.length === 0 ? (
               <EmptyState label={emptyLabel} />
             ) : view === "list" ? (
@@ -1081,6 +1085,29 @@ function EmptyState({ label }: { label: string }) {
     <div className="flex flex-col items-center gap-4 rounded-3xl bg-white p-16 text-center shadow-[2px_4px_12px_rgba(0,0,0,0.08)]">
       <SearchX className="h-12 w-12 text-muted-foreground" strokeWidth={1.5} />
       <p className="text-lg font-medium">{label}</p>
+    </div>
+  );
+}
+
+function ErrorState({ message }: { message: string }) {
+  return (
+    <div className="flex flex-col items-center gap-3 rounded-3xl bg-white p-16 text-center shadow-[2px_4px_12px_rgba(0,0,0,0.08)]">
+      <p className="text-lg font-semibold text-destructive">
+        Couldn't load pieces
+      </p>
+      <p className="max-w-md text-sm text-muted-foreground">
+        The catalogue API didn't respond. Check that the dev server is running
+        (both Vite on port 5180 and uvicorn on port 4000), then reload.
+      </p>
+      <p className="mt-1 rounded-lg bg-muted px-3 py-1 text-xs font-mono text-muted-foreground">
+        {message}
+      </p>
+      <button
+        onClick={() => window.location.reload()}
+        className="mt-3 inline-flex h-9 items-center rounded-full border border-border bg-background px-4 text-sm font-medium hover:bg-accent"
+      >
+        Retry
+      </button>
     </div>
   );
 }

@@ -4,7 +4,7 @@ import { ProductListing } from "@/components/product-listing";
 import { useProducts } from "@/hooks/use-products";
 
 export function ProductsPage() {
-  const { products, loading } = useProducts();
+  const { products, loading, error } = useProducts();
 
   return (
     <div className="min-h-screen bg-background">
@@ -15,6 +15,7 @@ export function ProductsPage() {
           subtitle="Every stitch handmade to order. Filter by category, price, or feature to find the piece that fits."
           products={products}
           loading={loading}
+          error={error}
           emptyLabel="No pieces match these filters — try widening the range."
         />
       </main>

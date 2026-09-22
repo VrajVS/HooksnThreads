@@ -8,7 +8,7 @@ import { useProducts } from "@/hooks/use-products";
 export function SearchPage() {
   const [searchParams] = useSearchParams();
   const query = searchParams.get("q")?.trim() ?? "";
-  const { products, loading } = useProducts({ search: query || undefined });
+  const { products, loading, error } = useProducts({ search: query || undefined });
 
   return (
     <div className="min-h-screen bg-background">
@@ -23,6 +23,7 @@ export function SearchPage() {
           }
           products={products}
           loading={loading}
+          error={error}
           emptyLabel={
             query
               ? "No pieces matched your search"
