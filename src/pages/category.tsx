@@ -17,7 +17,7 @@ export function CategoryPage() {
       <div className="min-h-screen bg-background">
         <Navbar />
         <div className="container flex flex-col items-center gap-4 py-32 text-center">
-          <h1 className="text-3xl font-semibold">Category not found</h1>
+          <h1 className="font-brand text-3xl font-semibold">Category not found</h1>
           <Link to="/" className="text-sm font-medium underline">
             Back to home
           </Link>
@@ -52,7 +52,7 @@ export function CategoryPage() {
 
           <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
             <div>
-              <h1 className="text-4xl font-semibold leading-tight md:text-5xl lg:text-6xl">
+              <h1 className="font-brand text-4xl font-semibold leading-tight md:text-5xl lg:text-6xl">
                 {category.name}
               </h1>
               <p className="mt-4 text-lg text-muted-foreground">

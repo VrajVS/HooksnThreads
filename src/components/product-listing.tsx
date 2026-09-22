@@ -262,7 +262,7 @@ export function ProductListing({
     <>
       <div className="container py-10 md:py-14">
         <div className="mb-8">
-          <h1 className="text-3xl font-semibold md:text-4xl">{title}</h1>
+          <h1 className="font-brand text-3xl font-semibold md:text-4xl">{title}</h1>
           {subtitle && (
             <p className="mt-2 text-muted-foreground">{subtitle}</p>
           )}

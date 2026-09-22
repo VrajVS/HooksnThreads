@@ -11,7 +11,7 @@ export function NotFoundPage() {
       <Navbar />
       <main className="container flex flex-col items-center gap-4 py-32 text-center">
         <Compass className="h-14 w-14 text-muted-foreground" strokeWidth={1.5} />
-        <h1 className="text-4xl font-semibold">Page not found</h1>
+        <h1 className="font-brand text-4xl font-semibold">Page not found</h1>
         <p className="max-w-md text-muted-foreground">
           The page you're looking for doesn't exist, or may have moved. Let's
           get you back to the catalogue.

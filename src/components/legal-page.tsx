@@ -17,7 +17,7 @@ export function LegalPage({
       <Navbar />
       <main className="container py-16">
         <div className="mx-auto max-w-3xl">
-          <h1 className="text-4xl font-semibold md:text-5xl">{title}</h1>
+          <h1 className="font-brand text-4xl font-semibold md:text-5xl">{title}</h1>
           <p className="mt-2 text-sm text-muted-foreground">
             Last updated: {updated}
           </p>

@@ -13,7 +13,7 @@ export function CartPage() {
     <div className="min-h-screen bg-background">
       <Navbar />
       <main className="container py-16">
-        <h1 className="text-4xl font-semibold md:text-5xl">Your Cart</h1>
+        <h1 className="font-brand text-4xl font-semibold md:text-5xl">Your Cart</h1>
 
         {items.length === 0 ? (
           <div className="mt-12 flex flex-col items-center gap-4 rounded-3xl bg-white p-16 text-center shadow-[2px_4px_12px_rgba(0,0,0,0.08)]">

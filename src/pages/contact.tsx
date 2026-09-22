@@ -23,7 +23,7 @@ export function ContactPage() {
       <Navbar />
       <main className="container py-16">
         <div className="mx-auto max-w-xl text-center">
-          <h1 className="text-4xl font-semibold md:text-5xl">Get in Touch</h1>
+          <h1 className="font-brand text-4xl font-semibold md:text-5xl">Get in Touch</h1>
           <p className="mt-4 text-muted-foreground">
             Questions about an order, a custom piece, or anything else? Reach
             out and we'll get back to you.

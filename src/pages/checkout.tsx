@@ -17,7 +17,7 @@ export function CheckoutPage() {
       <main className="container flex flex-col items-center py-16 text-center">
         <div className="flex max-w-xl flex-col items-center gap-4 rounded-3xl bg-white p-12 shadow-[2px_4px_12px_rgba(0,0,0,0.08)]">
           <Clock className="h-12 w-12 text-muted-foreground" strokeWidth={1.5} />
-          <h1 className="text-3xl font-semibold">Online checkout is coming soon</h1>
+          <h1 className="font-brand text-3xl font-semibold">Online checkout is coming soon</h1>
           <p className="text-muted-foreground">
             We're setting up secure online payments. In the meantime, send us
             your cart on Instagram and we'll confirm pricing and get your

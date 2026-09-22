@@ -55,7 +55,7 @@ export function HeroSection() {
             </span>
           </div>
 
-          <h1 className="text-4xl font-semibold leading-tight md:text-5xl lg:text-6xl">
+          <h1 className="font-brand text-4xl font-semibold leading-tight md:text-5xl lg:text-6xl">
             Handmade Elegance, Stitch by Stitch
           </h1>
 

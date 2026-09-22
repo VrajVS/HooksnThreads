@@ -46,7 +46,7 @@ export function ProductPage() {
       <div className="min-h-screen bg-background">
         <Navbar />
         <div className="container flex flex-col items-center gap-4 py-32 text-center">
-          <h1 className="text-3xl font-semibold">Product not found</h1>
+          <h1 className="font-brand text-3xl font-semibold">Product not found</h1>
           <Link to="/" className="text-sm font-medium underline">
             Back to home
           </Link>
@@ -89,7 +89,7 @@ export function ProductPage() {
 
         <div className="flex flex-col justify-center">
           <div className="flex items-start justify-between gap-4">
-            <h1 className="text-4xl font-semibold md:text-5xl">
+            <h1 className="font-brand text-4xl font-semibold md:text-5xl">
               {product.title}
             </h1>
             <button

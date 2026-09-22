@@ -88,7 +88,7 @@ export function ComparePage() {
 
         <div className="mb-8 flex flex-wrap items-end justify-between gap-3">
           <div>
-            <h1 className="text-3xl font-semibold md:text-4xl">Compare pieces</h1>
+            <h1 className="font-brand text-3xl font-semibold md:text-4xl">Compare pieces</h1>
             <p className="mt-2 text-muted-foreground">
               Side-by-side view of what you've picked.
             </p>
