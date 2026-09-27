@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { PasswordInput } from "@/components/ui/password-input";
 import { useAuth } from "@/context/auth-context";
 import { ApiError } from "@/lib/api";
+import { safeNext } from "@/lib/safe-next";
 import { cn } from "@/lib/utils";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -25,6 +26,8 @@ interface FieldErrors {
 export function SignupPage() {
   const { signup } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const next = safeNext(searchParams.get("next"));
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -67,7 +70,7 @@ export function SignupPage() {
         marketing_opt_in: marketingOptIn,
       });
       toast.success("Account created — check your email to verify");
-      navigate("/");
+      navigate(next);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Something went wrong");
     } finally {
@@ -195,7 +198,7 @@ export function SignupPage() {
 
           <p className="mt-6 text-center text-sm text-muted-foreground">
             Already have an account?{" "}
-            <Link to="/login" className="font-medium text-foreground underline underline-offset-2">
+            <Link to={next === "/" ? "/login" : `/login?next=${encodeURIComponent(next)}`} className="font-medium text-foreground underline underline-offset-2">
               Log in
             </Link>
           </p>

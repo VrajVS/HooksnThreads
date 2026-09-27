@@ -1,8 +1,10 @@
+from decimal import Decimal
+
 from fastapi import APIRouter, Depends, HTTPException
 from psycopg import Connection
 from psycopg.errors import ForeignKeyViolation, UniqueViolation
 from psycopg.rows import dict_row
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from app.db import get_conn
 from app.deps import require_permission
@@ -12,6 +14,11 @@ router = APIRouter(prefix="/api/admin/products", tags=["admin-products"])
 SELECT_COLUMNS = "handle, title, price, image_url AS image, category_slug AS category, featured"
 
 
+class AccessoryLine(BaseModel):
+    accessory_id: int
+    quantity: Decimal = Field(gt=0)
+
+
 class ProductBody(BaseModel):
     handle: str
     title: str
@@ -19,6 +26,7 @@ class ProductBody(BaseModel):
     image: str
     category: str
     featured: bool = False
+    accessories: list[AccessoryLine] = []
 
 
 class ProductUpdateBody(BaseModel):
@@ -27,6 +35,24 @@ class ProductUpdateBody(BaseModel):
     image: str
     category: str
     featured: bool = False
+    # None leaves the current mapping untouched.
+    accessories: list[AccessoryLine] | None = None
+
+
+def _replace_accessories(conn: Connection, handle: str, lines: list[AccessoryLine]) -> None:
+    ids = [line.accessory_id for line in lines]
+    if len(ids) != len(set(ids)):
+        raise HTTPException(status_code=400, detail="Each accessory can only be added once")
+    with conn.cursor() as cur:
+        cur.execute("DELETE FROM product_accessories WHERE product_handle = %s", (handle,))
+        for line in lines:
+            cur.execute(
+                """
+                INSERT INTO product_accessories (product_handle, accessory_id, quantity)
+                VALUES (%s, %s, %s)
+                """,
+                (handle, line.accessory_id, line.quantity),
+            )
 
 
 @router.get("")
@@ -53,7 +79,10 @@ def admin_list_products(
     where = f"WHERE {' AND '.join(conditions)}" if conditions else ""
 
     query = f"""
-        SELECT {SELECT_COLUMNS}, count(*) OVER() AS total
+        SELECT {SELECT_COLUMNS},
+               (SELECT count(*) FROM product_accessories pa WHERE pa.product_handle = products.handle)
+                   AS accessory_count,
+               count(*) OVER() AS total
         FROM products
         {where}
         ORDER BY created_at DESC
@@ -68,6 +97,31 @@ def admin_list_products(
     for row in rows:
         del row["total"]
     return {"items": rows, "total": total}
+
+
+@router.get("/{handle}")
+def admin_get_product(
+    handle: str,
+    conn: Connection = Depends(get_conn),
+    _admin: dict = Depends(require_permission("products.view")),
+):
+    with conn.cursor(row_factory=dict_row) as cur:
+        cur.execute(f"SELECT {SELECT_COLUMNS} FROM products WHERE handle = %s", (handle,))
+        product = cur.fetchone()
+        if product is None:
+            raise HTTPException(status_code=404, detail="Product not found")
+        cur.execute(
+            """
+            SELECT a.id AS accessory_id, a.name, a.unit, a.stock, pa.quantity
+            FROM product_accessories pa
+            JOIN accessories a ON a.id = pa.accessory_id
+            WHERE pa.product_handle = %s
+            ORDER BY a.name
+            """,
+            (handle,),
+        )
+        product["accessories"] = cur.fetchall()
+    return product
 
 
 @router.post("", status_code=201)
@@ -85,13 +139,17 @@ def create_product(
                 """,
                 (body.handle, body.title, body.price, body.image, body.category, body.featured),
             )
+        _replace_accessories(conn, body.handle, body.accessories)
         conn.commit()
     except UniqueViolation:
         conn.rollback()
         raise HTTPException(status_code=409, detail="A product with this handle already exists")
     except ForeignKeyViolation:
         conn.rollback()
-        raise HTTPException(status_code=400, detail="Unknown category")
+        raise HTTPException(status_code=400, detail="Unknown category or accessory")
+    except HTTPException:
+        conn.rollback()
+        raise
     return {"handle": body.handle}
 
 
@@ -115,10 +173,15 @@ def update_product(
             )
             if cur.rowcount == 0:
                 raise HTTPException(status_code=404, detail="Product not found")
+        if body.accessories is not None:
+            _replace_accessories(conn, handle, body.accessories)
         conn.commit()
     except ForeignKeyViolation:
         conn.rollback()
-        raise HTTPException(status_code=400, detail="Unknown category")
+        raise HTTPException(status_code=400, detail="Unknown category or accessory")
+    except HTTPException:
+        conn.rollback()
+        raise
     return {"handle": handle}
 
 

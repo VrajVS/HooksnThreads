@@ -1,13 +1,22 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import { Loader2 } from "lucide-react";
+import { Link, useNavigate, useParams } from "react-router-dom";
+import { Loader2, Plus, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { AdminLayout } from "@/components/admin-layout";
 import { Button } from "@/components/ui/button";
 import { ApiError, api, uploadImage } from "@/lib/api";
 import type { Category, Product } from "@/data/site-data";
+import { type AccessoryOption, type Qty, formatQty } from "@/lib/inventory";
 import { cn } from "@/lib/utils";
+
+interface AccessoryLine {
+  key: number;
+  accessoryId: string;
+  quantity: string;
+}
+
+let lineKey = 0;
 
 const HANDLE_PATTERN = /^[a-z0-9-]+$/;
 
@@ -36,6 +45,13 @@ export function AdminProductFormPage() {
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [loaded, setLoaded] = useState(!isEdit);
+  const [accessoryOptions, setAccessoryOptions] = useState<AccessoryOption[]>([]);
+  const [lines, setLines] = useState<AccessoryLine[]>([]);
+  const [lineErrors, setLineErrors] = useState<Record<number, string>>({});
+
+  useEffect(() => {
+    api.get<AccessoryOption[]>("/admin/accessories/options").then(setAccessoryOptions).catch(() => {});
+  }, []);
 
   useEffect(() => {
     api.get<Category[]>("/categories").then((cats) => {
@@ -46,13 +62,22 @@ export function AdminProductFormPage() {
 
   useEffect(() => {
     if (!isEdit || !handle) return;
-    api.get<Product>(`/products/${handle}`).then((p) => {
+    api
+      .get<Product & { accessories: { accessory_id: number; quantity: Qty }[] }>(`/admin/products/${handle}`)
+      .then((p) => {
       setHandleValue(p.handle);
       setTitle(p.title);
       setPrice(String(p.price));
       setCategory(p.category);
       setImage(p.image);
       setFeatured(p.featured ?? false);
+      setLines(
+        p.accessories.map((a) => ({
+          key: ++lineKey,
+          accessoryId: String(a.accessory_id),
+          quantity: formatQty(a.quantity),
+        })),
+      );
       setLoaded(true);
     });
   }, [isEdit, handle]);
@@ -88,12 +113,38 @@ export function AdminProductFormPage() {
     return errors;
   };
 
+  const validateLines = (): Record<number, string> => {
+    const errors: Record<number, string> = {};
+    for (const line of lines) {
+      const qty = Number(line.quantity);
+      if (!line.accessoryId) errors[line.key] = "Choose an accessory";
+      else if (!line.quantity || Number.isNaN(qty) || qty <= 0) errors[line.key] = "Enter a quantity greater than 0";
+    }
+    return errors;
+  };
+
+  const updateLine = (key: number, patch: Partial<AccessoryLine>) => {
+    setLines((prev) => prev.map((l) => (l.key === key ? { ...l, ...patch } : l)));
+    setLineErrors((prev) => {
+      const next = { ...prev };
+      delete next[key];
+      return next;
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     const errors = validate();
+    const accessoryErrors = validateLines();
     setFieldErrors(errors);
-    if (Object.keys(errors).length > 0) return;
+    setLineErrors(accessoryErrors);
+    if (Object.keys(errors).length > 0 || Object.keys(accessoryErrors).length > 0) return;
+
+    const accessories = lines.map((l) => ({
+      accessory_id: Number(l.accessoryId),
+      quantity: Number(l.quantity),
+    }));
 
     setSubmitting(true);
     try {
@@ -104,6 +155,7 @@ export function AdminProductFormPage() {
           image,
           category,
           featured,
+          accessories,
         });
       } else {
         await api.post("/admin/products", {
@@ -113,6 +165,7 @@ export function AdminProductFormPage() {
           image,
           category,
           featured,
+          accessories,
         });
       }
       toast.success(isEdit ? "Product updated" : "Product created");
@@ -260,6 +313,92 @@ export function AdminProductFormPage() {
           />
           Featured on home page
         </label>
+
+        <fieldset className="flex flex-col gap-3 rounded-xl border border-zinc-200 p-4">
+          <legend className="px-1 text-sm font-medium">Accessories used</legend>
+          <p className="-mt-1 text-xs text-muted-foreground">
+            Materials needed to make one piece. They're deducted from stock when an order for this
+            product is confirmed.
+          </p>
+
+          {lines.length === 0 && (
+            <p className="text-sm text-muted-foreground">No accessories mapped.</p>
+          )}
+
+          {lines.map((line) => {
+            const chosenElsewhere = new Set(
+              lines.filter((l) => l.key !== line.key).map((l) => l.accessoryId),
+            );
+            const selected = accessoryOptions.find((a) => String(a.id) === line.accessoryId);
+            return (
+              <div key={line.key} className="flex flex-col gap-1">
+                <div className="flex items-center gap-2">
+                  <select
+                    aria-label="Accessory"
+                    value={line.accessoryId}
+                    onChange={(e) => updateLine(line.key, { accessoryId: e.target.value })}
+                    className="min-w-0 flex-1 rounded-xl border border-zinc-200 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[hsl(var(--admin-accent))]"
+                  >
+                    <option value="" disabled>
+                      Choose accessory
+                    </option>
+                    {accessoryOptions.map((a) => (
+                      <option key={a.id} value={String(a.id)} disabled={chosenElsewhere.has(String(a.id))}>
+                        {a.name} ({formatQty(a.stock)} {a.unit} in stock)
+                      </option>
+                    ))}
+                  </select>
+                  <input
+                    aria-label="Quantity per piece"
+                    type="number"
+                    min="0"
+                    step="any"
+                    inputMode="decimal"
+                    value={line.quantity}
+                    onChange={(e) => updateLine(line.key, { quantity: e.target.value })}
+                    placeholder="Qty"
+                    className="w-20 rounded-xl border border-zinc-200 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[hsl(var(--admin-accent))]"
+                  />
+                  <span className="w-12 truncate text-xs text-muted-foreground">{selected?.unit ?? ""}</span>
+                  <button
+                    type="button"
+                    onClick={() => setLines((prev) => prev.filter((l) => l.key !== line.key))}
+                    aria-label="Remove accessory"
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-zinc-500 hover:bg-zinc-100"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+                {lineErrors[line.key] && (
+                  <p className="text-xs text-destructive">{lineErrors[line.key]}</p>
+                )}
+              </div>
+            );
+          })}
+
+          <div className="flex flex-wrap items-center gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={accessoryOptions.length === 0 || lines.length >= accessoryOptions.length}
+              onClick={() =>
+                setLines((prev) => [...prev, { key: ++lineKey, accessoryId: "", quantity: "1" }])
+              }
+            >
+              <Plus className="h-4 w-4" />
+              Add accessory
+            </Button>
+            {accessoryOptions.length === 0 && (
+              <p className="text-xs text-muted-foreground">
+                No accessories yet.{" "}
+                <Link to="/admin/accessories/new" className="text-[hsl(var(--admin-accent))] hover:underline">
+                  Create one
+                </Link>
+              </p>
+            )}
+          </div>
+        </fieldset>
 
         <Button type="submit" variant="accent" size="lg" disabled={submitting || uploading} className="mt-2">
           {submitting && <Loader2 className="h-4 w-4 animate-spin" />}

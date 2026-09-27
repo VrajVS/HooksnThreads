@@ -17,6 +17,7 @@ import { LoginPage } from "@/pages/login";
 import { SignupPage } from "@/pages/signup";
 import { VerifyEmailPage } from "@/pages/verify-email";
 import { AddressesPage } from "@/pages/account/addresses";
+import { OrdersPage } from "@/pages/account/orders";
 import { NotFoundPage } from "@/pages/not-found";
 import { PrivacyPolicyPage } from "@/pages/legal/privacy-policy";
 import { TermsOfServicePage } from "@/pages/legal/terms-of-service";
@@ -27,6 +28,11 @@ import { AdminProductsPage } from "@/pages/admin/products";
 import { AdminProductFormPage } from "@/pages/admin/product-form";
 import { AdminCategoriesPage } from "@/pages/admin/categories";
 import { AdminCategoryFormPage } from "@/pages/admin/category-form";
+import { AdminAccessoriesPage } from "@/pages/admin/accessories";
+import { AdminAccessoryFormPage } from "@/pages/admin/accessory-form";
+import { AdminOrdersPage } from "@/pages/admin/orders";
+import { AdminOrderFormPage } from "@/pages/admin/order-form";
+import { AdminOrderDetailPage } from "@/pages/admin/order-detail";
 import { AdminUsersPage } from "@/pages/admin/users";
 import { AdminUserFormPage } from "@/pages/admin/user-form";
 import { AdminRolesPage } from "@/pages/admin/roles";
@@ -69,6 +75,7 @@ function App() {
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/verify-email" element={<VerifyEmailPage />} />
         <Route path="/account/addresses" element={<AddressesPage />} />
+        <Route path="/account/orders" element={<OrdersPage />} />
         <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
         <Route path="/terms-of-service" element={<TermsOfServicePage />} />
         <Route path="/refund-policy" element={<RefundPolicyPage />} />
@@ -82,6 +89,12 @@ function App() {
         <Route path="/admin/categories" element={<AdminCategoriesPage />} />
         <Route path="/admin/categories/new" element={<AdminCategoryFormPage />} />
         <Route path="/admin/categories/:slug/edit" element={<AdminCategoryFormPage />} />
+        <Route path="/admin/accessories" element={<AdminAccessoriesPage />} />
+        <Route path="/admin/accessories/new" element={<AdminAccessoryFormPage />} />
+        <Route path="/admin/accessories/:id/edit" element={<AdminAccessoryFormPage />} />
+        <Route path="/admin/orders" element={<AdminOrdersPage />} />
+        <Route path="/admin/orders/new" element={<AdminOrderFormPage />} />
+        <Route path="/admin/orders/:id" element={<AdminOrderDetailPage />} />
         <Route path="/admin/users" element={<AdminUsersPage />} />
         <Route path="/admin/users/new" element={<AdminUserFormPage />} />
         <Route path="/admin/users/:id/edit" element={<AdminUserFormPage />} />

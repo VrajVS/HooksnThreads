@@ -4,6 +4,7 @@ import { Link, Navigate, useLocation } from "react-router-dom";
 import {
   Boxes,
   ChevronDown,
+  ClipboardList,
   ChevronsLeft,
   ChevronsRight,
   ExternalLink,
@@ -11,8 +12,10 @@ import {
   LogOut,
   Menu,
   Package,
+  Scissors,
   Shield,
   ShieldCheck,
+  ShoppingBag,
   Tag,
   Users as UsersIcon,
   X,
@@ -50,6 +53,14 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { label: "Products", to: "/admin/products", icon: Package, permission: "products.view" },
       { label: "Categories", to: "/admin/categories", icon: Tag, permission: "categories.view" },
+      { label: "Accessories", to: "/admin/accessories", icon: Scissors, permission: "accessories.view" },
+    ],
+  },
+  {
+    label: "Sales",
+    icon: ShoppingBag,
+    items: [
+      { label: "Orders", to: "/admin/orders", icon: ClipboardList, permission: "orders.view" },
     ],
   },
   {

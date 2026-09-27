@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -9,10 +9,13 @@ import { Button } from "@/components/ui/button";
 import { PasswordInput } from "@/components/ui/password-input";
 import { useAuth } from "@/context/auth-context";
 import { ApiError } from "@/lib/api";
+import { safeNext } from "@/lib/safe-next";
 
 export function LoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const next = safeNext(searchParams.get("next"));
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -25,7 +28,7 @@ export function LoginPage() {
     try {
       await login(email, password);
       toast.success("Logged in");
-      navigate("/");
+      navigate(next);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Something went wrong");
     } finally {
@@ -82,7 +85,7 @@ export function LoginPage() {
 
           <p className="mt-6 text-center text-sm text-muted-foreground">
             Don't have an account?{" "}
-            <Link to="/signup" className="font-medium text-foreground underline underline-offset-2">
+            <Link to={next === "/" ? "/signup" : `/signup?next=${encodeURIComponent(next)}`} className="font-medium text-foreground underline underline-offset-2">
               Sign up
             </Link>
           </p>

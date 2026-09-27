@@ -21,20 +21,22 @@ import { useHasPermission } from "@/hooks/use-has-permission";
 import { ApiError, api } from "@/lib/api";
 import type { Product } from "@/data/site-data";
 
+type AdminProduct = Product & { accessory_count?: number };
+
 const PAGE_SIZE = 10;
 
 export function AdminProductsPage() {
   const canCreate = useHasPermission("products.create");
   const canUpdate = useHasPermission("products.update");
   const canDelete = useHasPermission("products.delete");
-  const [products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<AdminProduct[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [pendingDelete, setPendingDelete] = useState<Product | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<AdminProduct | null>(null);
 
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -50,7 +52,7 @@ export function AdminProductsPage() {
     const query = new URLSearchParams({ page: String(page), page_size: String(PAGE_SIZE) });
     if (search) query.set("search", search);
     api
-      .get<{ items: Product[]; total: number }>(`/admin/products?${query}`)
+      .get<{ items: AdminProduct[]; total: number }>(`/admin/products?${query}`)
       .then((res) => {
         setProducts(res.items);
         setTotal(res.total);
@@ -111,6 +113,7 @@ export function AdminProductsPage() {
                   <th className="px-4 py-3">Category</th>
                   <th className="px-4 py-3">Price</th>
                   <th className="px-4 py-3">Featured</th>
+                  <th className="px-4 py-3">Accessories</th>
                   <th className="px-4 py-3" />
                 </tr>
               </thead>
@@ -133,12 +136,15 @@ export function AdminProductsPage() {
                   <td className="px-4 py-3">
                     <Skeleton className="h-4 w-8" />
                   </td>
+                  <td className="px-4 py-3">
+                    <Skeleton className="h-4 w-8" />
+                  </td>
                   <td className="px-4 py-3" />
                 </tr>
               ))
             ) : error ? (
               <tr>
-                <td colSpan={6} className="px-4 py-8 text-center">
+                <td colSpan={7} className="px-4 py-8 text-center">
                   <p className="text-destructive">{error}</p>
                   <Button variant="outline" size="sm" className="mt-3" onClick={load}>
                     Retry
@@ -147,7 +153,7 @@ export function AdminProductsPage() {
               </tr>
             ) : products.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">
+                <td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">
                   {search ? "No products matched your search." : "No products yet."}
                 </td>
               </tr>
@@ -171,6 +177,15 @@ export function AdminProductsPage() {
                       </span>
                     ) : (
                       "—"
+                    )}
+                  </td>
+                  <td className="px-4 py-3">
+                    {product.accessory_count ? (
+                      <span className="text-muted-foreground">{product.accessory_count} mapped</span>
+                    ) : (
+                      <span className="rounded-full bg-amber-100 px-2.5 py-1 text-xs font-medium text-amber-800">
+                        None
+                      </span>
                     )}
                   </td>
                   <td className="px-4 py-3">

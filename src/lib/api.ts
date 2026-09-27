@@ -1,9 +1,11 @@
 export class ApiError extends Error {
   status: number;
+  data: unknown;
 
-  constructor(status: number, message: string) {
+  constructor(status: number, message: string, data?: unknown) {
     super(message);
     this.status = status;
+    this.data = data;
   }
 }
 
@@ -23,7 +25,8 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
       window.location.assign("/admin/login");
     }
     const body = await res.json().catch(() => null);
-    throw new ApiError(res.status, body?.detail ?? `Request failed (${res.status})`);
+    const detail = typeof body?.detail === "string" ? body.detail : undefined;
+    throw new ApiError(res.status, detail ?? `Request failed (${res.status})`, body);
   }
 
   if (res.status === 204) return undefined as T;

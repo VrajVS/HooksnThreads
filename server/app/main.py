@@ -7,13 +7,16 @@ from fastapi.staticfiles import StaticFiles
 from app.config import CORS_ORIGIN, UPLOAD_DIR
 from app.routers import (
     addresses,
+    admin_accessories,
     admin_auth,
     admin_categories,
+    admin_orders,
     admin_products,
     admin_roles,
     admin_users,
     auth,
     categories,
+    orders,
     products,
     uploads,
 )
@@ -39,6 +42,9 @@ app.include_router(categories.router)
 app.include_router(products.router)
 app.include_router(admin_categories.router)
 app.include_router(admin_products.router)
+app.include_router(admin_accessories.router)
+app.include_router(admin_orders.router)
+app.include_router(orders.router)
 app.include_router(admin_users.router)
 app.include_router(admin_roles.router)
 app.include_router(uploads.router)

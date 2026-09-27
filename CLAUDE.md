@@ -38,7 +38,7 @@ Postgres is running locally on 5432 with `postgres`/`postgres` for user/password
 
 ## Database
 
-Seven tables, all managed by a hand-rolled migration runner (`server/scripts/migrate.py`) that applies numbered `.sql` files from `server/migrations/` and tracks state in `schema_migrations`:
+Tables are all managed by a hand-rolled migration runner (`server/scripts/migrate.py`) that applies numbered `.sql` files from `server/migrations/` and tracks state in `schema_migrations`:
 
 - `customer_users` — storefront customers (was `users`, renamed in migration 007)
 - `store_users` — admin-panel staff (was `admins`, renamed in migration 006)
@@ -46,9 +46,18 @@ Seven tables, all managed by a hand-rolled migration runner (`server/scripts/mig
 - `role_permissions` — `(role_id, permission_key)` many-to-many
 - `categories` — slug PK
 - `products` — handle PK, `category_slug` FK
+- `customer_addresses`, `email_verification_tokens` — customer extras (migration 008)
+- `accessories` — raw materials with `stock` / `low_stock_threshold` (NUMERIC, so yarn can be grams)
+- `product_accessories` — `(product_handle, accessory_id, quantity)`: what one piece consumes
+- `orders`, `order_items` — `source` is `admin` or `storefront`; items snapshot title + unit price
+- `inventory_movements` — ledger of every stock change (`initial`, `adjustment`, `order`, `order_cancelled`)
 - `schema_migrations` — migration bookkeeping
 
-Seed: `python scripts/seed.py` inserts 5 categories + 27 products, creates the Super Admin role with all 16 permissions, and creates the seeded admin from env vars. Idempotent.
+**Accessory stock rule** (`server/app/inventory.py`): stock is deducted when an order becomes `confirmed` (or `completed`) and restored when a deducted order is `cancelled`. `orders.stock_deducted` guards against double-deducting; a restore reverses exactly the order's recorded movements, so editing a product's mapping later can't skew stock. Confirming with insufficient stock returns 409 + `shortages` unless `allow_shortage` is set (stock may then go negative). Admin-entered orders default to confirmed; storefront orders start `pending` and wait for the studio to confirm. Status flow: pending → confirmed/cancelled, confirmed → completed/cancelled, completed → cancelled.
+
+The live catalogue (16 categories, 154 products) came from `python scripts/import_catalog.py D:\Personal\HooksnThreads`, which parses the old static site and copies images into `public/images/products/`. Don't re-run `seed.py` against it: it resets the 27 original products to their placeholder titles/images.
+
+Seed: `python scripts/seed.py` inserts 5 categories + 27 products, creates the Super Admin role with all permissions, and creates the seeded admin from env vars. Idempotent.
 
 ## Auth: two fully separate systems
 
@@ -61,11 +70,13 @@ Both use bcrypt + JWT in an httpOnly cookie. Neither cookie grants any access to
 
 ## Permissions
 
-CRUD-level, 16 keys total, defined in `server/app/permissions.py`:
+CRUD-level, 24 keys total, defined in `server/app/permissions.py`:
 
 ```
 products.{view,create,update,delete}
 categories.{view,create,update,delete}
+accessories.{view,create,update,delete}
+orders.{view,create,update,delete}
 users.{view,create,update,delete}
 roles.{view,create,update,delete}
 ```
@@ -82,12 +93,15 @@ Storefront:
 - Home with hero, featured products, category grid, image marquee, guide cards, FAQ, carousel
 - Category pages, product pages, search
 - Cart, wishlist (still `localStorage`-backed — not in DB)
-- Customer signup / login / logout
+- Customer signup / login / logout (`?next=` redirect), address book
+- Checkout places a real order (no payment yet) → `pending`; `/account/orders` lists the customer's orders
 - Legal pages (privacy, refund, shipping, terms), contact, 404
 
 Admin panel (`/admin/*`):
 - Products CRUD with image upload
 - Categories CRUD with image upload
+- Accessories (Inventory Module): stock, low-stock filter, manual adjustments, per-accessory history; mapped to products from the product form
+- Orders (Sales): admin order entry with live accessory-requirement preview, confirm / complete / cancel with stock deduction and restore
 - Users CRUD (admin panel users only — customers are managed separately at the DB layer)
 - Roles CRUD with a permission matrix (module × CRUD checkboxes)
 - Collapsible sidebar with brand mandala icon, avatar dropdown, change-password dialog
@@ -95,8 +109,7 @@ Admin panel (`/admin/*`):
 
 ## What's deferred (do not build unless asked)
 
-- **Checkout / payments / orders** — blocked on Razorpay credentials. No `orders` / `order_items` / `addresses` tables yet.
-- **Customer account dashboard** — no order history page, no address book; the customer login only powers "is someone logged in" for the navbar.
+- **Online payments** — blocked on Razorpay credentials. Orders exist, but checkout collects no payment; the studio confirms and arranges payment manually.
 - **Real image hosting** — admin-uploaded images live on local disk at `server/uploads/`. Fine for dev; a real deploy will need object storage.
 - **Route-level permission guards on the frontend** — deliberately not added. Backend is authoritative; SPA hides nav.
 
@@ -115,6 +128,7 @@ Admin panel (`/admin/*`):
 ## Recurring gotchas
 
 - **Zombie uvicorn workers.** After code changes, sometimes a stale worker keeps serving old code and returns 500 on the first request. Symptom: an endpoint that worked five minutes ago now 500s and the log shows a schema/table error that's already been fixed. Fix: `Get-Process python3.13`, kill the worker PID (not the reloader — the reloader has the lowest PID and will respawn a fresh worker). Bit us three times during table renames.
+- **A backend reload can kill Vite.** On Windows, uvicorn's `--reload` sends Ctrl+C to the console group that `concurrently` shares, so Vite sometimes exits (code 1, no error) right after a Python file changes. Restart `npm run dev`; if port 4000 is still held, kill the orphaned uvicorn first.
 - **Vite HMR gets wedged occasionally** after an import error early in a session. Fix: delete `node_modules/.vite` and restart `npm run dev`.
 - **PowerShell + git stderr.** `git push` writes informational messages to stderr, which PowerShell renders in red as if it's an error. Read the actual git output, not the color.
 - **Windows line-endings (CRLF vs LF).** `git add` will warn on nearly every file. Cosmetic, not a real issue.
@@ -143,7 +157,9 @@ server/                    — backend root (Python 3.13 + FastAPI)
     config.py              — env var loading
     security.py            — bcrypt + PyJWT
     deps.py                — require_customer, require_admin, require_permission factory
-    permissions.py         — the 16 permission-key constant
+    permissions.py         — the permission-key constant
+    inventory.py           — accessory stock deduct/restore for orders
+    orders.py              — shared order creation + status transitions
     routers/
       auth.py              — customer signup/login/logout/me
       admin_auth.py        — admin login/logout/me/change-password
@@ -151,6 +167,9 @@ server/                    — backend root (Python 3.13 + FastAPI)
       admin_roles.py       — role CRUD + permission matrix
       admin_products.py    — product CRUD, paginated
       admin_categories.py  — category CRUD, paginated
+      admin_accessories.py — accessory CRUD, stock adjust, history
+      admin_orders.py      — order entry, status changes, requirement preview
+      orders.py            — customer: place order, list own orders
       products.py, categories.py — public read endpoints
       uploads.py           — multipart image upload
   migrations/*.sql         — numbered, applied in order

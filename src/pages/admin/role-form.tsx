@@ -30,6 +30,8 @@ const ACTION_LABELS: Record<string, string> = {
 const MODULE_LABELS: Record<string, string> = {
   products: "Products",
   categories: "Categories",
+  accessories: "Accessories",
+  orders: "Orders",
   users: "Users",
   roles: "Roles",
 };

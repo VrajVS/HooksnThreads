@@ -11,6 +11,8 @@ ACTIONS = ("view", "create", "update", "delete")
 PERMISSIONS: dict[str, list[str]] = {
     "products": list(ACTIONS),
     "categories": list(ACTIONS),
+    "accessories": list(ACTIONS),
+    "orders": list(ACTIONS),
     "users": list(ACTIONS),
     "roles": list(ACTIONS),
 }
