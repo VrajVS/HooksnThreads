@@ -7,6 +7,7 @@ import { ProductsPage } from "@/pages/products";
 import { CategoryPage } from "@/pages/category";
 import { ComparePage } from "@/pages/compare";
 import { CompareBar } from "@/components/compare-bar";
+import { VerificationBanner } from "@/components/verification-banner";
 import { CartPage } from "@/pages/cart";
 import { CheckoutPage } from "@/pages/checkout";
 import { WishlistPage } from "@/pages/wishlist";
@@ -14,6 +15,8 @@ import { SearchPage } from "@/pages/search";
 import { ContactPage } from "@/pages/contact";
 import { LoginPage } from "@/pages/login";
 import { SignupPage } from "@/pages/signup";
+import { VerifyEmailPage } from "@/pages/verify-email";
+import { AddressesPage } from "@/pages/account/addresses";
 import { NotFoundPage } from "@/pages/not-found";
 import { PrivacyPolicyPage } from "@/pages/legal/privacy-policy";
 import { TermsOfServicePage } from "@/pages/legal/terms-of-service";
@@ -50,6 +53,7 @@ function App() {
   return (
     <>
       <ScrollManager />
+      <VerificationBanner />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/product/:handle" element={<ProductPage />} />
@@ -63,6 +67,8 @@ function App() {
         <Route path="/contact" element={<ContactPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
+        <Route path="/verify-email" element={<VerifyEmailPage />} />
+        <Route path="/account/addresses" element={<AddressesPage />} />
         <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
         <Route path="/terms-of-service" element={<TermsOfServicePage />} />
         <Route path="/refund-policy" element={<RefundPolicyPage />} />

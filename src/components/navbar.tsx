@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Heart, LogOut, MessageCircle, Search, ShoppingBag, User } from "lucide-react";
+import { Heart, LogOut, MapPin, MessageCircle, Search, ShoppingBag, User } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 
 import { GradientButton } from "@/components/gradient-button";
@@ -107,8 +107,17 @@ export function Navbar() {
                 <User className="h-5 w-5" />
               </button>
               {accountOpen && (
-                <div className="absolute right-0 top-12 w-48 rounded-2xl bg-white p-2 shadow-[2px_4px_12px_rgba(0,0,0,0.12)]">
+                <div className="absolute right-0 top-12 w-56 rounded-2xl bg-white p-2 shadow-[2px_4px_12px_rgba(0,0,0,0.12)]">
                   <p className="truncate px-3 py-2 text-sm font-medium">{user.full_name}</p>
+                  <Link
+                    to="/account/addresses"
+                    onClick={() => setAccountOpen(false)}
+                    className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm text-muted-foreground hover:bg-accent"
+                  >
+                    <MapPin className="h-4 w-4" />
+                    Addresses
+                  </Link>
+                  <div className="my-1 border-t border-border" />
                   <button
                     onClick={() => {
                       setAccountOpen(false);

@@ -6,6 +6,7 @@ from fastapi.staticfiles import StaticFiles
 
 from app.config import CORS_ORIGIN, UPLOAD_DIR
 from app.routers import (
+    addresses,
     admin_auth,
     admin_categories,
     admin_products,
@@ -32,6 +33,7 @@ upload_root.mkdir(parents=True, exist_ok=True)
 app.mount("/uploads", StaticFiles(directory=str(upload_root)), name="uploads")
 
 app.include_router(auth.router)
+app.include_router(addresses.router)
 app.include_router(admin_auth.router)
 app.include_router(categories.router)
 app.include_router(products.router)

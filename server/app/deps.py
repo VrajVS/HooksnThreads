@@ -13,12 +13,23 @@ def require_customer(request: Request, conn: Connection = Depends(get_conn)) -> 
         raise HTTPException(status_code=401, detail="Not authenticated")
     with conn.cursor() as cur:
         cur.execute(
-            "SELECT id, email, full_name, phone FROM customer_users WHERE id = %s", (user_id,)
+            """
+            SELECT id, email, full_name, phone, email_verified_at, marketing_opt_in
+            FROM customer_users WHERE id = %s
+            """,
+            (user_id,),
         )
         row = cur.fetchone()
     if row is None:
         raise HTTPException(status_code=401, detail="Not authenticated")
-    return {"id": row[0], "email": row[1], "full_name": row[2], "phone": row[3]}
+    return {
+        "id": row[0],
+        "email": row[1],
+        "full_name": row[2],
+        "phone": row[3],
+        "email_verified": row[4] is not None,
+        "marketing_opt_in": row[5],
+    }
 
 
 def _load_admin(conn: Connection, admin_id: int) -> dict | None:

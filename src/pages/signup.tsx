@@ -12,11 +12,14 @@ import { ApiError } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const PHONE_PATTERN = /^\+?\d{10,15}$/;
 
 interface FieldErrors {
   fullName?: string;
   email?: string;
+  phone?: string;
   password?: string;
+  acceptTerms?: string;
 }
 
 export function SignupPage() {
@@ -26,6 +29,8 @@ export function SignupPage() {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
+  const [acceptTerms, setAcceptTerms] = useState(false);
+  const [marketingOptIn, setMarketingOptIn] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [submitting, setSubmitting] = useState(false);
@@ -35,7 +40,12 @@ export function SignupPage() {
     if (!fullName.trim()) errors.fullName = "Full name is required";
     if (!email.trim()) errors.email = "Email is required";
     else if (!EMAIL_PATTERN.test(email)) errors.email = "Enter a valid email address";
+    const cleanPhone = phone.replace(/[\s\-()]/g, "");
+    if (!cleanPhone) errors.phone = "Phone number is required";
+    else if (!PHONE_PATTERN.test(cleanPhone))
+      errors.phone = "Enter a valid 10–15 digit phone number";
     if (password.length < 8) errors.password = "At least 8 characters";
+    if (!acceptTerms) errors.acceptTerms = "You must accept the terms to continue";
     return errors;
   };
 
@@ -48,8 +58,15 @@ export function SignupPage() {
 
     setSubmitting(true);
     try {
-      await signup(email, password, fullName, phone || undefined);
-      toast.success("Account created");
+      await signup({
+        email,
+        password,
+        full_name: fullName,
+        phone: phone.replace(/[\s\-()]/g, ""),
+        accept_terms: acceptTerms,
+        marketing_opt_in: marketingOptIn,
+      });
+      toast.success("Account created — check your email to verify");
       navigate("/");
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Something went wrong");
@@ -75,54 +92,33 @@ export function SignupPage() {
                 {error}
               </p>
             )}
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor="fullName" className="text-sm font-medium">
-                Full Name
-              </label>
+            <Field label="Full Name" htmlFor="fullName" error={fieldErrors.fullName}>
               <input
                 id="fullName"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
-                className={cn(
-                  "rounded-full border bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-1",
-                  fieldErrors.fullName
-                    ? "border-destructive focus:ring-destructive"
-                    : "border-border focus:ring-ring",
-                )}
+                className={inputClass(!!fieldErrors.fullName)}
               />
-              {fieldErrors.fullName && (
-                <p className="text-xs text-destructive">{fieldErrors.fullName}</p>
-              )}
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor="email" className="text-sm font-medium">
-                Email
-              </label>
+            </Field>
+            <Field label="Email" htmlFor="email" error={fieldErrors.email}>
               <input
                 id="email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className={cn(
-                  "rounded-full border bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-1",
-                  fieldErrors.email
-                    ? "border-destructive focus:ring-destructive"
-                    : "border-border focus:ring-ring",
-                )}
+                className={inputClass(!!fieldErrors.email)}
               />
-              {fieldErrors.email && <p className="text-xs text-destructive">{fieldErrors.email}</p>}
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor="phone" className="text-sm font-medium">
-                Phone (optional)
-              </label>
+            </Field>
+            <Field label="Phone" htmlFor="phone" error={fieldErrors.phone}>
               <input
                 id="phone"
+                type="tel"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                className="rounded-full border border-border bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+                placeholder="+91 98765 43210"
+                className={inputClass(!!fieldErrors.phone)}
               />
-            </div>
+            </Field>
             <div className="flex flex-col gap-1.5">
               <label htmlFor="password" className="text-sm font-medium">
                 Password
@@ -147,6 +143,50 @@ export function SignupPage() {
                 {fieldErrors.password ?? "At least 8 characters"}
               </p>
             </div>
+
+            <div className="mt-2 flex flex-col gap-3 border-t border-border pt-4">
+              <label className="flex cursor-pointer items-start gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={acceptTerms}
+                  onChange={(e) => setAcceptTerms(e.target.checked)}
+                  className="mt-0.5 h-4 w-4 rounded border-border accent-foreground"
+                />
+                <span className="text-muted-foreground">
+                  I agree to the{" "}
+                  <Link
+                    to="/terms-of-service"
+                    className="font-medium text-foreground underline underline-offset-2"
+                    target="_blank"
+                  >
+                    Terms of Service
+                  </Link>{" "}
+                  and{" "}
+                  <Link
+                    to="/privacy-policy"
+                    className="font-medium text-foreground underline underline-offset-2"
+                    target="_blank"
+                  >
+                    Privacy Policy
+                  </Link>
+                </span>
+              </label>
+              {fieldErrors.acceptTerms && (
+                <p className="text-xs text-destructive">{fieldErrors.acceptTerms}</p>
+              )}
+              <label className="flex cursor-pointer items-start gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={marketingOptIn}
+                  onChange={(e) => setMarketingOptIn(e.target.checked)}
+                  className="mt-0.5 h-4 w-4 rounded border-border accent-foreground"
+                />
+                <span className="text-muted-foreground">
+                  Email me about new pieces and occasional sales
+                </span>
+              </label>
+            </div>
+
             <Button type="submit" size="lg" disabled={submitting} className="mt-2">
               {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
               {submitting ? "Creating account..." : "Create Account"}
@@ -162,6 +202,37 @@ export function SignupPage() {
         </div>
       </main>
       <Footer />
+    </div>
+  );
+}
+
+function inputClass(hasError: boolean) {
+  return cn(
+    "rounded-full border bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-1",
+    hasError
+      ? "border-destructive focus:ring-destructive"
+      : "border-border focus:ring-ring",
+  );
+}
+
+function Field({
+  label,
+  htmlFor,
+  error,
+  children,
+}: {
+  label: string;
+  htmlFor: string;
+  error?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <label htmlFor={htmlFor} className="text-sm font-medium">
+        {label}
+      </label>
+      {children}
+      {error && <p className="text-xs text-destructive">{error}</p>}
     </div>
   );
 }
