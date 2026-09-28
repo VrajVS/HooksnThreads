@@ -654,6 +654,7 @@ button { font: inherit; cursor: pointer; }
 }
 
 </style>
+<link rel="stylesheet" href="book/book.css" />
 </head>
 <body>
 
@@ -715,7 +716,8 @@ button { font: inherit; cursor: pointer; }
 
 <!-- ─── CATEGORY NAV (sticky) ─── -->
 <nav id="catalogue" class="cat-nav" aria-label="Collections">
-  <div class="wrap cat-rail">
+  <div class="wrap cat-row">
+  <div class="cat-rail">
     <button class="chip" data-filter="flowers">Forever Flowers </button>
     <button class="chip" data-filter="festivals">Festive Specials </button>
     <button class="chip" data-filter="keychains">Keychains </button>
@@ -733,7 +735,43 @@ button { font: inherit; cursor: pointer; }
     <button class="chip" data-filter="beach">Beachwear </button>
     <button class="chip" data-filter="phone">Phone Accessories </button>
   </div>
+  <div class="view-toggle" role="group" aria-label="View catalogue as">
+    <button type="button" data-view="grid" aria-pressed="true">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/></svg>
+      Grid
+    </button>
+    <button type="button" data-view="book" aria-pressed="false">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" aria-hidden="true"><path d="M8 4c-1.6-1.2-3.6-1.6-6-1.4v9.6c2.4-.2 4.4.2 6 1.4 1.6-1.2 3.6-1.6 6-1.4V2.6C11.6 2.4 9.6 2.8 8 4Z"/><path d="M8 4v9.6"/></svg>
+      Book
+    </button>
+  </div>
+  </div>
 </nav>
+
+<!-- ─── BOOK VIEW (built from the collections below by book/book.js) ─── -->
+<section id="book-view" class="book-view" aria-label="Catalogue book" hidden>
+  <div class="wrap">
+    <div class="bk-stage">
+      <div class="bk-3d">
+        <div class="bk-tilt">
+          <div class="bk-shadow" aria-hidden="true"></div>
+          <div class="bk-cover" aria-hidden="true"></div>
+          <div class="bk-book"></div>
+        </div>
+      </div>
+    </div>
+    <div class="bk-bar">
+      <button type="button" class="bk-arrow bk-prev" aria-label="Previous page">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3 5 8l5 5"/></svg>
+      </button>
+      <p class="bk-cap" aria-live="polite"><span class="bk-cap-title"></span><span class="bk-cap-page"></span></p>
+      <button type="button" class="bk-arrow bk-next" aria-label="Next page">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 3 5 5-5 5"/></svg>
+      </button>
+    </div>
+    <p class="bk-hint">Drag or tap a page to turn it · Arrow keys work too</p>
+  </div>
+</section>
 
 <!-- ─── CATEGORY SECTIONS ─── -->
 
@@ -1224,6 +1262,7 @@ button { font: inherit; cursor: pointer; }
   chips.forEach(chip => {
     chip.addEventListener('click', () => {
       const filter = chip.dataset.filter;
+      if (window.HTBook && HTBook.goToCat(filter)) return;
       const target = document.querySelector(`.collection[data-cat="${filter}"]`);
       if (!target) return;
       const y = target.getBoundingClientRect().top + window.scrollY - headerH() - navH() - 8;
@@ -1239,6 +1278,7 @@ button { font: inherit; cursor: pointer; }
   chips.forEach(c => chipByCat.set(c.dataset.filter, c));
 
   function updateActiveByScroll() {
+    if (window.HTBook && HTBook.isOn()) return;
     const probeY = headerH() + navH() + 60;
     let currentCat = null;
     for (const s of sections) {
@@ -1284,6 +1324,7 @@ button { font: inherit; cursor: pointer; }
       const target = document.querySelector(id);
       if (!target) return;
       e.preventDefault();
+      if (target.classList.contains('collection') && window.HTBook && HTBook.goToCat(target.dataset.cat)) return;
       const y = target.getBoundingClientRect().top + window.scrollY - headerH() - navH() - 8;
       window.scrollTo({ top: y, behavior: 'smooth' });
     });
@@ -1291,5 +1332,6 @@ button { font: inherit; cursor: pointer; }
 })();
 
 </script>
+<script src="book/book.js"></script>
 </body>
 </html>
