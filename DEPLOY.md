@@ -10,6 +10,17 @@ The site runs as three containers, all namespaced by `COMPOSE_PROJECT_NAME`:
 
 Data lives in two named volumes: `<project>_db-data` (the database) and `<project>_uploads` (images uploaded in the admin panel). Product images from the catalogue are baked into the `web` image.
 
+## Live setup (stremio-server-2, 92.4.84.246)
+
+Installed 2026-09-29 on Ubuntu 22.04 (ARM):
+
+- **Caddy** on the host owns 80/443 and fetches HTTPS certificates. Config: `/etc/caddy/Caddyfile` (template: [`deploy/Caddyfile`](deploy/Caddyfile)).
+- **Jenkins** in Docker (`deploy/jenkins/`, configuration as code), on `127.0.0.1:8080`, served at `jenkins.92.4.84.246.sslip.io`. It polls the `website` branch every 5 minutes and runs the [`Jenkinsfile`](Jenkinsfile): build images -> `docker compose up -d` -> smoke test through nginx -> API -> database.
+- **This site** as Compose project `hooksnthreads`, `web` on `127.0.0.1:8090`, served at `hooksnthreads.92.4.84.246.sslip.io`. Settings: `/opt/hooksnthreads/hooksnthreads.env` (root:docker, 640).
+- **Firewall:** iptables allows 22/80/443 only; Postgres is never exposed.
+
+Deploying a change = push to `website`. Passwords and server commands are in the private credentials file, not in git.
+
 ## Several sites on one server
 
 Each site is its own Compose project with its own `COMPOSE_PROJECT_NAME` and `WEB_PORT`, so containers, networks and volumes never collide. One reverse proxy on the server owns ports 80/443, handles HTTPS, and routes each domain to its site's localhost port.
