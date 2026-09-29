@@ -2,14 +2,14 @@ from fastapi import APIRouter, Depends, HTTPException, Response
 from psycopg import Connection
 from pydantic import BaseModel, EmailStr
 
-from app.config import ADMIN_COOKIE_NAME
+from app.config import ADMIN_COOKIE_NAME, COOKIE_SECURE
 from app.db import get_conn
 from app.deps import require_admin
 from app.security import create_token, hash_password, verify_password
 
 router = APIRouter(prefix="/api/admin/auth", tags=["admin-auth"])
 
-COOKIE_KWARGS = dict(httponly=True, samesite="lax", max_age=60 * 60 * 24 * 7, path="/")
+COOKIE_KWARGS = dict(httponly=True, samesite="lax", secure=COOKIE_SECURE, max_age=60 * 60 * 24 * 7, path="/")
 
 
 class AdminLoginBody(BaseModel):
@@ -41,7 +41,7 @@ def admin_login(body: AdminLoginBody, response: Response, conn: Connection = Dep
 
 @router.post("/logout")
 def admin_logout(response: Response):
-    response.delete_cookie(ADMIN_COOKIE_NAME, path="/")
+    response.delete_cookie(ADMIN_COOKIE_NAME, path="/", secure=COOKIE_SECURE, httponly=True, samesite="lax")
     return {"ok": True}
 
 

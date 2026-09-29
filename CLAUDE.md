@@ -24,6 +24,10 @@ That uses `concurrently` to start Vite (port 5180) and uvicorn (port 4000) toget
 
 Python venv lives at `server/venv` (not committed). If you're setting up from scratch: `cd server && python -m venv venv && venv\Scripts\pip install -r requirements.txt`.
 
+## Production (Docker)
+
+`docker-compose.yml` runs three containers namespaced by `COMPOSE_PROJECT_NAME`, built for sharing a server with other sites: `web` (root `Dockerfile`: Vite build served by nginx, `deploy/nginx.conf` proxies `/api` + `/uploads`), `api` (`server/Dockerfile`: runs `scripts/migrate.py` then uvicorn on every start) and `db` (Postgres 18, private network). Only `web` is published, on `127.0.0.1:${WEB_PORT}`, behind the server's shared reverse proxy. Settings come from a root `.env` (template: `.env.example`, gitignored). Full runbook, including moving the local database in with `pg_dump`/`pg_restore`: `DEPLOY.md`.
+
 ## Environment
 
 `server/.env` (gitignored — do not commit) holds:
@@ -33,6 +37,8 @@ Python venv lives at `server/venv` (not committed). If you're setting up from sc
 - `CUSTOMER_COOKIE_NAME` — `session_token`
 - `ADMIN_COOKIE_NAME` — `admin_token`
 - `ADMIN_SEED_EMAIL` / `ADMIN_SEED_PASSWORD` — the initial Super Admin account created by `scripts/seed.py`
+- `PUBLIC_URL` — storefront address used in customer email links (default `http://localhost:5180`)
+- `COOKIE_SECURE` — `true` in production so auth cookies are HTTPS-only (default `false` for local dev)
 
 Postgres is running locally on 5432 with `postgres`/`postgres` for user/password.
 
@@ -49,11 +55,15 @@ Tables are all managed by a hand-rolled migration runner (`server/scripts/migrat
 - `customer_addresses`, `email_verification_tokens` — customer extras (migration 008)
 - `accessories` — raw materials with `stock` / `low_stock_threshold` (NUMERIC, so yarn can be grams)
 - `product_accessories` — `(product_handle, accessory_id, quantity)`: what one piece consumes
-- `orders`, `order_items` — `source` is `admin` or `storefront`; items snapshot title + unit price
+- `orders`, `order_items` — `source` is `admin` or `storefront`; items snapshot title + unit price. Items may be free text (`product_handle` NULL: custom pieces, no stock tracking) and carry `prepared` + `work_note`. Orders carry `invoice_number` (YYYYMM + per-month sequence, unique), `order_date`, `delivered` / `delivery_date`, `charges_total`
+- `order_charges` — wrapping / courier / discount lines (negative = deduction); `order_payments` — payments (online / cash), so advances and split payments work
+- `business_settings` — single row of seller details printed on invoices
 - `inventory_movements` — ledger of every stock change (`initial`, `adjustment`, `order`, `order_cancelled`)
 - `schema_migrations` — migration bookkeeping
 
-**Accessory stock rule** (`server/app/inventory.py`): stock is deducted when an order becomes `confirmed` (or `completed`) and restored when a deducted order is `cancelled`. `orders.stock_deducted` guards against double-deducting; a restore reverses exactly the order's recorded movements, so editing a product's mapping later can't skew stock. Confirming with insufficient stock returns 409 + `shortages` unless `allow_shortage` is set (stock may then go negative). Admin-entered orders default to confirmed; storefront orders start `pending` and wait for the studio to confirm. Status flow: pending → confirmed/cancelled, confirmed → completed/cancelled, completed → cancelled.
+**Accessory stock rule** (`server/app/inventory.py`): stock is deducted when an order becomes `confirmed` (or `completed`) and restored when a deducted order is `cancelled`. `orders.stock_deducted` guards against double-deducting; a restore reverses exactly the order's recorded movements, so editing a product's mapping later can't skew stock. Confirming with insufficient stock returns 409 + `shortages` unless `allow_shortage` is set (stock may then go negative). Admin-entered orders default to confirmed; storefront orders start `pending` and wait for the studio to confirm. Status flow: pending → confirmed/cancelled, confirmed → completed/cancelled, completed → cancelled. Marking completed also marks every item prepared and the order delivered. Editing a stock-holding order restores and re-deducts stock if its catalogue items changed.
+
+**Order stage** (`ORDER_TOTALS_CTE` in `server/app/orders.py`) mirrors the studio's order spreadsheet colour key and is derived, not stored: preparation pending → work in progress (some items prepared or noted) → delivery pending → payment pending → done. The order module was modelled on that spreadsheet (`Crochet Orders.xlsx`): its Orders, Pending orders and Items sold sheets map to the Orders, Pending work and Items sold tabs.
 
 The live catalogue (16 categories, 154 products) came from `python scripts/import_catalog.py D:\Personal\HooksnThreads`, which parses the old static site and copies images into `public/images/products/`. Don't re-run `seed.py` against it: it resets the 27 original products to their placeholder titles/images.
 
@@ -98,10 +108,12 @@ Storefront:
 - Legal pages (privacy, refund, shipping, terms), contact, 404
 
 Admin panel (`/admin/*`):
+- Dashboard (`/admin`, `/admin/dashboard`, the post-login landing page): period picker, sales KPIs vs previous period, 12-month revenue chart, order pipeline by stage, needs-attention lists, top items, low stock, catalogue health. `GET /api/admin/dashboard` returns only the sections the admin's permissions allow (orders / accessories / products)
 - Products CRUD with image upload
 - Categories CRUD with image upload
 - Accessories (Inventory Module): stock, low-stock filter, manual adjustments, per-accessory history; mapped to products from the product form
-- Orders (Sales): admin order entry with live accessory-requirement preview, confirm / complete / cancel with stock deduction and restore
+- Orders (Sales): manual order entry and editing (catalogue or custom items, extra charges, payments, per-item prepared + "what is left to do", delivery), stage filters, month filter with totals, Pending work and Items sold tabs, live accessory-requirement preview, confirm / complete / cancel with stock deduction and restore
+- Printable invoice at `/admin/orders/:id/invoice` (browser print → Save as PDF), laid out like the studio's old Excel invoice with `public/images/logo-invoice.png`; seller details come from "Invoice details" on the Orders page
 - Users CRUD (admin panel users only — customers are managed separately at the DB layer)
 - Roles CRUD with a permission matrix (module × CRUD checkboxes)
 - Collapsible sidebar with brand mandala icon, avatar dropdown, change-password dialog
@@ -169,6 +181,7 @@ server/                    — backend root (Python 3.13 + FastAPI)
       admin_categories.py  — category CRUD, paginated
       admin_accessories.py — accessory CRUD, stock adjust, history
       admin_orders.py      — order entry, status changes, requirement preview
+      admin_dashboard.py   — dashboard aggregates, permission-gated per section
       orders.py            — customer: place order, list own orders
       products.py, categories.py — public read endpoints
       uploads.py           — multipart image upload

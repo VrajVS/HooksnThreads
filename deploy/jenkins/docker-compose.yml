@@ -1,0 +1,23 @@
+# Jenkins for this server. Run from this directory on the server:
+#   docker compose --env-file /opt/jenkins/jenkins.env up -d --build
+name: jenkins
+
+services:
+  jenkins:
+    build: .
+    image: hnt-jenkins:lts-jdk17
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8080:8080"
+    env_file: /opt/jenkins/jenkins.env
+    group_add:
+      # Host's docker group, so the jenkins user can use the mounted socket.
+      - "${DOCKER_GID:?set DOCKER_GID in /opt/jenkins/jenkins.env}"
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+      # The deploy's secrets file (compose reads it on the client side).
+      - /opt/hooksnthreads:/opt/hooksnthreads:ro
+
+volumes:
+  jenkins_home:

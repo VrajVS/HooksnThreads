@@ -8,7 +8,7 @@ from psycopg import Connection
 from psycopg.errors import UniqueViolation
 from pydantic import BaseModel, EmailStr, Field, field_validator
 
-from app.config import CUSTOMER_COOKIE_NAME
+from app.config import COOKIE_SECURE, CUSTOMER_COOKIE_NAME, PUBLIC_URL
 from app.db import get_conn
 from app.deps import require_customer
 from app.security import create_token, hash_password, verify_password
@@ -16,7 +16,7 @@ from app.security import create_token, hash_password, verify_password
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 log = logging.getLogger("hnt.auth")
 
-COOKIE_KWARGS = dict(httponly=True, samesite="lax", max_age=60 * 60 * 24 * 30, path="/")
+COOKIE_KWARGS = dict(httponly=True, samesite="lax", secure=COOKIE_SECURE, max_age=60 * 60 * 24 * 30, path="/")
 
 VERIFICATION_TTL = timedelta(days=2)
 PHONE_RE = re.compile(r"^\+?\d{10,15}$")
@@ -69,7 +69,7 @@ def _issue_verification_token(conn: Connection, customer_id: int, email: str) ->
     # No SMTP wired up in this project — log the link so it can be copied
     # from the uvicorn console during development. Replace this with a real
     # send when an email provider is configured.
-    link = f"http://localhost:5180/verify-email?token={token}"
+    link = f"{PUBLIC_URL}/verify-email?token={token}"
     log.warning("Email verification link for %s: %s", email, link)
     return token
 
@@ -145,7 +145,7 @@ def login(body: LoginBody, response: Response, conn: Connection = Depends(get_co
 
 @router.post("/logout")
 def logout(response: Response):
-    response.delete_cookie(CUSTOMER_COOKIE_NAME, path="/")
+    response.delete_cookie(CUSTOMER_COOKIE_NAME, path="/", secure=COOKIE_SECURE, httponly=True, samesite="lax")
     return {"ok": True}
 
 

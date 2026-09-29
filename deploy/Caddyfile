@@ -1,0 +1,12 @@
+# Server-wide reverse proxy (installed on the host, owns ports 80/443 and gets
+# HTTPS certificates automatically). Copy to /etc/caddy/Caddyfile.
+# One block per site; each site's `web` container listens on its own localhost port.
+
+hooksnthreads.92.4.84.246.sslip.io {
+	encode gzip
+	reverse_proxy 127.0.0.1:8090
+}
+
+jenkins.92.4.84.246.sslip.io {
+	reverse_proxy 127.0.0.1:8080
+}

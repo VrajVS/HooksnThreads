@@ -1,0 +1,54 @@
+# Jenkins configuration as code. ${...} values come from the container's
+# environment (/opt/jenkins/jenkins.env on the server), never from git.
+jenkins:
+  systemMessage: "Hooks & Threads CI. Deploys the website branch to this server."
+  numExecutors: 1
+  mode: NORMAL
+  # No build agents connect to this controller.
+  slaveAgentPort: -1
+  securityRealm:
+    local:
+      allowsSignup: false
+      users:
+        - id: "admin"
+          name: "Admin"
+          password: "${JENKINS_ADMIN_PASSWORD}"
+  authorizationStrategy:
+    loggedInUsersCanDoAnything:
+      allowAnonymousRead: false
+  crumbIssuer:
+    standard:
+      excludeClientIPFromCrumb: true
+
+security:
+  globalJobDslSecurityConfiguration:
+    useScriptSecurity: false
+
+unclassified:
+  location:
+    url: "${JENKINS_URL}"
+
+jobs:
+  - script: >
+      pipelineJob('hooksnthreads') {
+        description('Builds and deploys github.com/VrajVS/HooksnThreads (website branch).')
+        definition {
+          cpsScm {
+            scm {
+              git {
+                remote { url('https://github.com/VrajVS/HooksnThreads.git') }
+                branch('*/website')
+              }
+            }
+            scriptPath('Jenkinsfile')
+            lightweight(true)
+          }
+        }
+        properties {
+          pipelineTriggers {
+            triggers {
+              pollSCM { scmpoll_spec('H/5 * * * *') }
+            }
+          }
+        }
+      }

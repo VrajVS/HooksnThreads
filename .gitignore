@@ -17,6 +17,8 @@ server/venv
 server/__pycache__
 server/**/__pycache__
 server/.env
+# Docker Compose settings for a deployment (see .env.example)
+/.env
 server/uploads/*
 !server/uploads/products
 !server/uploads/categories

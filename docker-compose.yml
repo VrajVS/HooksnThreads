@@ -1,0 +1,67 @@
+# Hooks & Threads: web (nginx + SPA) -> api (FastAPI) -> db (Postgres).
+#
+# Built to share a server with other sites: every container, network and volume
+# is namespaced by the project name, the database is never published, and the
+# only published port is the web one, bound to 127.0.0.1 so the server's shared
+# reverse proxy (Caddy / nginx / Traefik) is the single public entry point.
+# See DEPLOY.md.
+
+name: ${COMPOSE_PROJECT_NAME:-hooksnthreads}
+
+services:
+  db:
+    image: postgres:18-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-hooksnthreads}
+      POSTGRES_USER: ${POSTGRES_USER:-hooksnthreads}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+    volumes:
+      # Postgres 18 images keep data under /var/lib/postgresql/<major>/docker.
+      - db-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks: [backend]
+
+  api:
+    build: ./server
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-hooksnthreads}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-hooksnthreads}
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in .env}
+      PUBLIC_URL: ${PUBLIC_URL:?Set PUBLIC_URL in .env, e.g. https://hooksnthreads.shop}
+      CORS_ORIGIN: ${PUBLIC_URL}
+      COOKIE_SECURE: ${COOKIE_SECURE:-true}
+      ADMIN_SEED_EMAIL: ${ADMIN_SEED_EMAIL:-}
+      ADMIN_SEED_PASSWORD: ${ADMIN_SEED_PASSWORD:-}
+      UVICORN_WORKERS: ${UVICORN_WORKERS:-2}
+    volumes:
+      - uploads:/app/uploads
+    networks: [backend, frontend]
+
+  web:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      # Pick a free port per site on the server; only localhost can reach it.
+      - "127.0.0.1:${WEB_PORT:-8080}:80"
+    networks: [frontend]
+
+networks:
+  frontend:
+  backend:
+    # The database network has no route to the outside world.
+    internal: true
+
+volumes:
+  db-data:
+  uploads:
