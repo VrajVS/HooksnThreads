@@ -15,11 +15,11 @@ Data lives in two named volumes: `<project>_db-data` (the database) and `<projec
 Installed 2026-09-29 on Ubuntu 22.04 (ARM):
 
 - **Caddy** on the host owns 80/443 and fetches HTTPS certificates. Config: `/etc/caddy/Caddyfile` (template: [`deploy/Caddyfile`](deploy/Caddyfile)).
-- **Jenkins** in Docker (`deploy/jenkins/`, configuration as code), on `127.0.0.1:8080`, served at `jenkins.92.4.84.246.sslip.io`. It polls the `website` branch every 5 minutes and runs the [`Jenkinsfile`](Jenkinsfile): build images -> `docker compose up -d` -> smoke test through nginx -> API -> database.
+- **Jenkins** in Docker (`deploy/jenkins/`, configuration as code), on `127.0.0.1:8080`, served at `jenkins.92.4.84.246.sslip.io`. Deploys are manual: run the `hooksnthreads` job (Build Now) and it runs the [`Jenkinsfile`](Jenkinsfile): build images -> `docker compose up -d` -> smoke test through nginx -> API -> database.
 - **This site** as Compose project `hooksnthreads`, `web` on `127.0.0.1:8090`, served at `hooksnthreads.92.4.84.246.sslip.io`. Settings: `/opt/hooksnthreads/hooksnthreads.env` (root:docker, 640).
 - **Firewall:** iptables allows 22/80/443 only; Postgres is never exposed.
 
-Deploying a change = push to `website`. Passwords and server commands are in the private credentials file, not in git.
+Deploying a change = push to `website`, then click Build Now on the `hooksnthreads` job in Jenkins. Passwords and server commands are in the private credentials file, not in git.
 
 ## Several sites on one server
 

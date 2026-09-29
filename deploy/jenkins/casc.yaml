@@ -31,7 +31,7 @@ unclassified:
 jobs:
   - script: >
       pipelineJob('hooksnthreads') {
-        description('Builds and deploys github.com/VrajVS/HooksnThreads (website branch).')
+        description('Builds and deploys github.com/VrajVS/HooksnThreads (website branch). Run manually with Build Now.')
         definition {
           cpsScm {
             scm {
@@ -42,13 +42,6 @@ jobs:
             }
             scriptPath('Jenkinsfile')
             lightweight(true)
-          }
-        }
-        properties {
-          pipelineTriggers {
-            triggers {
-              pollSCM { scmpoll_spec('H/5 * * * *') }
-            }
           }
         }
       }

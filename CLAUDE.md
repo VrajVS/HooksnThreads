@@ -28,7 +28,7 @@ Python venv lives at `server/venv` (not committed). If you're setting up from sc
 
 `docker-compose.yml` runs three containers namespaced by `COMPOSE_PROJECT_NAME`, built for sharing a server with other sites: `web` (root `Dockerfile`: Vite build served by nginx, `deploy/nginx.conf` proxies `/api` + `/uploads`), `api` (`server/Dockerfile`: runs `scripts/migrate.py` then uvicorn on every start) and `db` (Postgres 18, private network). Only `web` is published, on `127.0.0.1:${WEB_PORT}`, behind the server's shared reverse proxy. Settings come from a root `.env` (template: `.env.example`, gitignored). Full runbook, including moving the local database in with `pg_dump`/`pg_restore`: `DEPLOY.md`.
 
-**Live:** https://hooksnthreads.92.4.84.246.sslip.io on Oracle `stremio-server-2` (92.4.84.246, ARM). Pushing to `website` deploys automatically: the server's Jenkins polls every 5 min and runs the `Jenkinsfile`. Server access and passwords are in `C:\Users\vraj.suthar\stremio-server-2-access\CREDENTIALS.local.txt` (never commit it). The live DB started as a copy of the local one on 2026-09-29; the two are separate from then on.
+**Live:** https://hooksnthreads.92.4.84.246.sslip.io on Oracle `stremio-server-2` (92.4.84.246, ARM). Deploys are manual: push to `website`, then run the `hooksnthreads` job (Build Now) in the server's Jenkins, which runs the `Jenkinsfile`. There is no polling. Server access and passwords are in `C:\Users\vraj.suthar\stremio-server-2-access\CREDENTIALS.local.txt` (never commit it). The live DB started as a copy of the local one on 2026-09-29; the two are separate from then on.
 
 ## Environment
 

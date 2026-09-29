@@ -1,5 +1,6 @@
 // Builds and deploys the site on the server Jenkins runs on (see DEPLOY.md).
 // Secrets live in /opt/hooksnthreads/hooksnthreads.env on the server, never in git.
+// Deploys are manual: run the job ("Build Now") when a push should go live.
 pipeline {
     agent any
 
@@ -8,10 +9,6 @@ pipeline {
         timestamps()
         buildDiscarder(logRotator(numToKeepStr: '20'))
         timeout(time: 30, unit: 'MINUTES')
-    }
-
-    triggers {
-        pollSCM('H/5 * * * *')
     }
 
     environment {
