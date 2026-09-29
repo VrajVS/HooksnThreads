@@ -59,6 +59,9 @@
     font-family: "Cinzel", Georgia, "Times New Roman", serif;
     letter-spacing: 0.08em;
   }
+  .font-display {
+    font-family: "Cormorant Garamond", "Cormorant", Georgia, serif;
+  }
   /* Catalogue display type: navy serif headings, <em> becomes the italic sage accent. */
   .display {
     font-family: "Cormorant Garamond", "Cormorant", Georgia, serif;
