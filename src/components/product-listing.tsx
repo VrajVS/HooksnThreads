@@ -17,6 +17,7 @@ import {
   X,
 } from "lucide-react";
 
+import { AddToCartButton } from "@/components/add-to-cart-button";
 import { GradientButton } from "@/components/gradient-button";
 import { QuickViewDialog } from "@/components/quick-view-dialog";
 import { RecentlyViewed } from "@/components/recently-viewed";
@@ -57,7 +58,7 @@ const PRICE_CHIPS: { label: string; min: number; max: number }[] = [
 const PAGE_SIZE = 12;
 
 interface Props {
-  title: string;
+  title: React.ReactNode;
   subtitle?: string;
   products: Product[];
   loading: boolean;
@@ -262,7 +263,7 @@ export function ProductListing({
     <>
       <div className="container py-10 md:py-14">
         <div className="mb-8">
-          <h1 className="font-brand text-3xl font-semibold md:text-4xl">{title}</h1>
+          <h1 className="display text-4xl md:text-5xl">{title}</h1>
           {subtitle && (
             <p className="mt-2 text-muted-foreground">{subtitle}</p>
           )}
@@ -357,7 +358,7 @@ export function ProductListing({
                 ))}
               </div>
             ) : (
-              <div className="grid grid-cols-2 gap-4 md:grid-cols-2 md:gap-6 lg:grid-cols-3 xl:grid-cols-4">
+              <div className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-5 xl:grid-cols-4 2xl:grid-cols-5">
                 {paged.map((p) => (
                   <GridCard
                     key={p.handle}
@@ -777,9 +778,14 @@ function SortDropdown({
 
 /* ---------- cards ---------- */
 
-function CardBadges() {
+function CardBadges({ inverted = false }: { inverted?: boolean }) {
   return (
-    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+    <div
+      className={cn(
+        "flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground transition-colors",
+        inverted && "group-hover:text-white/70",
+      )}
+    >
       <span className="inline-flex items-center gap-1">
         <Truck className="h-3.5 w-3.5" strokeWidth={1.5} />
         7–14 days
@@ -815,12 +821,18 @@ function WishlistButton({ product }: { product: Product }) {
   );
 }
 
+function cartItem(product: Product) {
+  return { handle: product.handle, title: product.title, price: product.price, image: product.image };
+}
+
 function CardActionsRow({
   product,
   onQuickView,
+  inverted = false,
 }: {
   product: Product;
   onQuickView: () => void;
+  inverted?: boolean;
 }) {
   const { isSelected, toggle } = useCompare();
   const compared = isSelected(product.handle);
@@ -828,7 +840,10 @@ function CardActionsRow({
     <div className="flex items-center justify-between text-xs">
       <button
         onClick={onQuickView}
-        className="inline-flex items-center gap-1 font-medium text-muted-foreground hover:text-foreground"
+        className={cn(
+          "inline-flex items-center gap-1 font-medium text-muted-foreground transition-colors hover:text-foreground",
+          inverted && "group-hover:text-white/70 group-hover:hover:text-white",
+        )}
       >
         <Eye className="h-3.5 w-3.5" />
         Quick view
@@ -838,6 +853,8 @@ function CardActionsRow({
         className={cn(
           "inline-flex items-center gap-1 font-medium transition-colors",
           compared ? "text-foreground" : "text-muted-foreground hover:text-foreground",
+          inverted &&
+            (compared ? "group-hover:text-white" : "group-hover:text-white/70 group-hover:hover:text-white"),
         )}
       >
         <GitCompare className="h-3.5 w-3.5" />
@@ -892,7 +909,7 @@ function GridCard({
   return (
     <div
       className={cn(
-        "group flex flex-col overflow-hidden rounded-2xl bg-white shadow-[2px_4px_12px_rgba(0,0,0,0.06)] transition-shadow hover:shadow-[4px_8px_20px_rgba(0,0,0,0.10)]",
+        "group flex flex-col overflow-hidden rounded-none bg-white shadow-[2px_4px_12px_rgba(0,0,0,0.06)] transition-shadow hover:shadow-[4px_8px_20px_rgba(0,0,0,0.10)]",
         bulkMode && bulkSelected && "ring-2 ring-foreground",
       )}
     >
@@ -920,34 +937,24 @@ function GridCard({
           />
         )}
       </div>
-      <div className="flex flex-1 flex-col gap-3 p-4">
-        <Link to={`/product/${product.handle}`} className="min-h-[3rem]">
-          <h3 className="line-clamp-2 text-base font-semibold leading-snug hover:opacity-70">
+      <div className="flex flex-1 flex-col gap-2 p-3 transition-colors duration-300 group-hover:bg-brand-navy">
+        <Link to={`/product/${product.handle}`}>
+          <h3 className="line-clamp-2 text-[15px] font-semibold leading-snug transition-colors hover:opacity-70 group-hover:text-white">
             {product.title}
           </h3>
         </Link>
-        <p className="text-sm text-muted-foreground">
-          <span className="text-lg font-bold text-foreground">
+        <p className="text-xs text-muted-foreground transition-colors group-hover:text-white/70">
+          <span className="text-base font-bold text-foreground transition-colors group-hover:text-white">
             ₹{product.price.toLocaleString("en-IN")}
           </span>{" "}
           per piece
         </p>
-        <CardBadges />
-        <GradientButton
+        <CardBadges inverted />
+        <AddToCartButton
           className="mt-auto w-full"
-          innerClassName="px-4 py-2 text-sm"
-          onClick={() =>
-            addItem({
-              handle: product.handle,
-              title: product.title,
-              price: product.price,
-              image: product.image,
-            })
-          }
-        >
-          Add to Cart
-        </GradientButton>
-        <CardActionsRow product={product} onQuickView={onQuickView} />
+          onClick={() => addItem(cartItem(product))}
+        />
+        <CardActionsRow product={product} onQuickView={onQuickView} inverted />
       </div>
     </div>
   );
@@ -1016,19 +1023,7 @@ function ListCard({
           Made to order in your favourite colours. Wrapped and ready to gift.
         </p>
         <div className="mt-auto flex flex-wrap items-center gap-3">
-          <GradientButton
-            innerClassName="px-5 py-2 text-sm"
-            onClick={() =>
-              addItem({
-                handle: product.handle,
-                title: product.title,
-                price: product.price,
-                image: product.image,
-              })
-            }
-          >
-            Add to Cart
-          </GradientButton>
+          <AddToCartButton className="px-6" onClick={() => addItem(cartItem(product))} />
           <div className="min-w-[10rem] flex-1">
             <CardActionsRow product={product} onQuickView={onQuickView} />
           </div>
@@ -1062,11 +1057,11 @@ function GridSkeleton({ view }: { view: ViewMode }) {
     );
   }
   return (
-    <div className="grid grid-cols-2 gap-4 md:grid-cols-2 md:gap-6 lg:grid-cols-3 xl:grid-cols-4">
+    <div className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-5 xl:grid-cols-4 2xl:grid-cols-5">
       {Array.from({ length: 8 }).map((_, i) => (
         <div
           key={i}
-          className="overflow-hidden rounded-2xl bg-white shadow-[2px_4px_12px_rgba(0,0,0,0.06)]"
+          className="overflow-hidden rounded-none bg-white shadow-[2px_4px_12px_rgba(0,0,0,0.06)]"
         >
           <Skeleton className="aspect-square w-full rounded-none" />
           <div className="space-y-3 p-4">

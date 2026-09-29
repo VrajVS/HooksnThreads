@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { ArrowRight, Heart, Palette, Truck } from "lucide-react";
 
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { GradientButton } from "@/components/gradient-button";
+import { AddToCartButton } from "@/components/add-to-cart-button";
 import { useCart } from "@/context/cart-context";
 import { useWishlist } from "@/context/wishlist-context";
 import type { Product } from "@/data/site-data";
@@ -82,8 +82,8 @@ export function QuickViewDialog({ product, open, onOpenChange }: Props) {
               </li>
             </ul>
             <div className="mt-auto flex flex-col gap-3">
-              <GradientButton
-                className="w-full"
+              <AddToCartButton
+                className="h-11 w-full text-base"
                 onClick={() => {
                   addItem({
                     handle: product.handle,
@@ -92,9 +92,7 @@ export function QuickViewDialog({ product, open, onOpenChange }: Props) {
                     image: product.image,
                   });
                 }}
-              >
-                Add to Cart
-              </GradientButton>
+              />
               <Link
                 to={`/product/${product.handle}`}
                 onClick={() => onOpenChange(false)}

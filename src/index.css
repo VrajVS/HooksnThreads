@@ -44,7 +44,7 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-family: "Jost", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   }
 }
 
@@ -58,5 +58,19 @@
   .font-brand {
     font-family: "Cinzel", Georgia, "Times New Roman", serif;
     letter-spacing: 0.08em;
+  }
+  /* Catalogue display type: navy serif headings, <em> becomes the italic sage accent. */
+  .display {
+    font-family: "Cormorant Garamond", "Cormorant", Georgia, serif;
+    font-weight: 500;
+    line-height: 1.05;
+    letter-spacing: -0.01em;
+    color: #2f3456;
+    text-wrap: balance;
+  }
+  .display em {
+    font-style: italic;
+    font-weight: 400;
+    color: #7a9582;
   }
 }

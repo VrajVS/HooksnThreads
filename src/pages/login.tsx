@@ -41,7 +41,7 @@ export function LoginPage() {
       <Navbar />
       <main className="container flex flex-col items-center py-16">
         <div className="w-full max-w-sm">
-          <h1 className="text-center text-3xl font-semibold">Log In</h1>
+          <h1 className="display text-center text-4xl">Log In</h1>
 
           <form
             onSubmit={handleSubmit}

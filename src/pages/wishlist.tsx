@@ -17,7 +17,7 @@ export function WishlistPage() {
     <div className="min-h-screen bg-background">
       <Navbar />
       <main className="container py-16">
-        <h1 className="font-brand text-4xl font-semibold md:text-5xl">Your Wishlist</h1>
+        <h1 className="display text-5xl md:text-6xl">Your <em>Wishlist</em></h1>
 
         {loading ? (
           <p className="mt-12 text-center text-muted-foreground">Loading...</p>

@@ -45,7 +45,7 @@ export function VerifyEmailPage() {
           {state.kind === "pending" && (
             <>
               <Loader2 className="mx-auto h-10 w-10 animate-spin text-muted-foreground" />
-              <h1 className="mt-4 font-brand text-2xl font-semibold">
+              <h1 className="display mt-4 text-3xl">
                 Verifying your email...
               </h1>
             </>
@@ -53,7 +53,7 @@ export function VerifyEmailPage() {
           {state.kind === "ok" && (
             <>
               <CheckCircle2 className="mx-auto h-12 w-12 text-green-600" />
-              <h1 className="mt-4 font-brand text-2xl font-semibold">
+              <h1 className="display mt-4 text-3xl">
                 Email verified
               </h1>
               <p className="mt-2 text-sm text-muted-foreground">
@@ -70,7 +70,7 @@ export function VerifyEmailPage() {
           {state.kind === "error" && (
             <>
               <XCircle className="mx-auto h-12 w-12 text-destructive" />
-              <h1 className="mt-4 font-brand text-2xl font-semibold">
+              <h1 className="display mt-4 text-3xl">
                 Couldn't verify
               </h1>
               <p className="mt-2 text-sm text-muted-foreground">{state.message}</p>
@@ -88,7 +88,7 @@ export function VerifyEmailPage() {
           )}
           {state.kind === "no-token" && (
             <>
-              <h1 className="font-brand text-2xl font-semibold">
+              <h1 className="display text-3xl">
                 Missing verification token
               </h1>
               <p className="mt-2 text-sm text-muted-foreground">

@@ -22,8 +22,8 @@ export function RecentlyViewed({ excludeHandle }: Props) {
   return (
     <section className="border-t border-border/50 bg-background py-12">
       <div className="container">
-        <h2 className="mb-6 text-xl font-semibold md:text-2xl">
-          Recently viewed
+        <h2 className="display mb-6 text-3xl md:text-4xl">
+          Recently <em>viewed</em>
         </h2>
         <div className="-mx-4 overflow-x-auto px-4">
           <div className="flex gap-4 pb-2">

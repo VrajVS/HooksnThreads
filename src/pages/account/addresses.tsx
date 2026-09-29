@@ -59,8 +59,8 @@ export function AddressesPage() {
               <Link to="/" className="hover:text-foreground">Account</Link>{" "}
               / Addresses
             </p>
-            <h1 className="mt-1 font-brand text-3xl font-semibold md:text-4xl">
-              Delivery Addresses
+            <h1 className="display mt-1 text-4xl md:text-5xl">
+              Delivery <em>Addresses</em>
             </h1>
             <p className="mt-2 max-w-xl text-sm text-muted-foreground">
               Save the places we should ship your pieces to. The default address

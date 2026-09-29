@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { Heart } from "lucide-react";
 
-import { GradientButton } from "@/components/gradient-button";
+import { AddToCartButton } from "@/components/add-to-cart-button";
 import { useCart } from "@/context/cart-context";
 import { useWishlist } from "@/context/wishlist-context";
 import type { Product } from "@/data/site-data";
@@ -51,8 +51,8 @@ export function ProductGrid({ products }: { products: Product[] }) {
               </span>{" "}
               per piece
             </p>
-            <GradientButton
-              className="w-full"
+            <AddToCartButton
+              className="h-11 w-full text-base"
               onClick={() =>
                 addItem({
                   handle: product.handle,
@@ -61,9 +61,7 @@ export function ProductGrid({ products }: { products: Product[] }) {
                   image: product.image,
                 })
               }
-            >
-              Add to Cart
-            </GradientButton>
+            />
           </div>
         );
       })}

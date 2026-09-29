@@ -9,6 +9,7 @@ import {
   ChevronsRight,
   ExternalLink,
   KeyRound,
+  LayoutDashboard,
   LogOut,
   Menu,
   Package,
@@ -178,6 +179,24 @@ export function AdminLayout({ children }: { children: ReactNode }) {
           </div>
 
           <nav className="mt-8 flex flex-col gap-1">
+            {(() => {
+              const active = location.pathname === "/admin" || location.pathname.startsWith("/admin/dashboard");
+              return (
+                <Link
+                  to="/admin/dashboard"
+                  title={collapsed ? "Dashboard" : undefined}
+                  onClick={() => setMobileOpen(false)}
+                  className={cn(
+                    "flex items-center gap-2 rounded-2xl px-3 py-2.5 text-sm font-medium transition-colors",
+                    collapsed && "justify-center",
+                    active ? "bg-[hsl(var(--admin-accent))] text-white" : "text-zinc-600 hover:bg-zinc-100",
+                  )}
+                >
+                  <LayoutDashboard className="h-4 w-4 shrink-0" />
+                  {!collapsed && <span>Dashboard</span>}
+                </Link>
+              );
+            })()}
             {NAV_GROUPS.map((group) => {
               const visibleItems = group.items.filter((item) =>
                 hasPermission(admin, item.permission),

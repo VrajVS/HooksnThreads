@@ -53,7 +53,7 @@ export function OrdersPage() {
         <p className="text-sm text-muted-foreground">
           <Link to="/" className="hover:text-foreground">Account</Link> / Orders
         </p>
-        <h1 className="mt-1 font-brand text-3xl font-semibold md:text-4xl">My Orders</h1>
+        <h1 className="display mt-1 text-4xl md:text-5xl">My <em>Orders</em></h1>
 
         {placedId && (
           <div className="mt-6 flex max-w-3xl gap-3 rounded-2xl bg-emerald-50 p-4 text-sm text-emerald-900">

@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field
 
 from app.db import get_conn
 from app.deps import require_customer
-from app.orders import insert_order, load_order
+from app.orders import Line, insert_order, load_order
 
 router = APIRouter(prefix="/api/orders", tags=["orders"])
 
@@ -54,7 +54,7 @@ def place_order(
             shipping_address=_format_address(address),
             notes=(body.notes or "").strip() or None,
             # Prices always come from the DB, never from the client's cart.
-            lines=[(line.handle, line.quantity, None) for line in body.items],
+            lines=[Line(line.handle, None, line.quantity, None) for line in body.items],
         )
         conn.commit()
     except Exception:
@@ -80,6 +80,10 @@ def my_order(order_id: int, user: dict = Depends(require_customer), conn: Connec
 
 
 def _public(order: dict) -> dict:
-    keys = ("id", "status", "customer_name", "customer_phone", "shipping_address", "notes",
-            "subtotal", "created_at", "items")
-    return {k: order[k] for k in keys}
+    keys = ("id", "invoice_number", "status", "customer_name", "customer_phone",
+            "shipping_address", "notes", "subtotal", "total", "created_at", "charges")
+    public = {k: order[k] for k in keys}
+    # Production progress and work notes are internal to the studio.
+    item_keys = ("id", "handle", "title", "unit_price", "quantity", "image")
+    public["items"] = [{k: item[k] for k in item_keys} for item in order["items"]]
+    return public

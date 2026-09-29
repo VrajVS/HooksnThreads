@@ -11,7 +11,7 @@ export function ProductsPage() {
       <Navbar />
       <main>
         <ProductListing
-          title="Shop All Pieces"
+          title={<>Shop All <em>Pieces</em></>}
           subtitle="Every stitch handmade to order. Filter by category, price, or feature to find the piece that fits."
           products={products}
           loading={loading}

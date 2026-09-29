@@ -15,8 +15,8 @@ export function WeightLossSection() {
     <section id="how-to-order" className="bg-background py-20">
       <div className="container grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
         <div>
-          <h2 className="text-4xl font-semibold leading-tight md:text-5xl lg:text-6xl">
-            Three simple steps to your dream piece.
+          <h2 className="display text-5xl md:text-6xl lg:text-7xl">
+            Three simple steps <em>to your dream piece.</em>
           </h2>
 
           <div className="mt-8 flex flex-col gap-4">

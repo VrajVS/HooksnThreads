@@ -11,8 +11,8 @@ export function FaqSection() {
     <section className="bg-background py-20">
       <div className="container">
         <div className="mx-auto max-w-2xl text-center">
-          <h2 className="text-3xl font-semibold md:text-4xl lg:text-5xl">
-            Frequently asked questions
+          <h2 className="display text-4xl md:text-5xl lg:text-6xl">
+            Frequently asked <em>questions</em>
           </h2>
         </div>
 

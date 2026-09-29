@@ -41,6 +41,12 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        // Background of the inverted brand logo (public/images/logo-inverted.png).
+        "brand-navy": "#2f3456",
+        // Muted antique gold accent that pairs with the navy and sage.
+        "brand-gold": "#b8975a",
+        // Italic accent colour of the catalogue headings.
+        "brand-sage": "#7a9582",
       },
       borderRadius: {
         lg: "var(--radius)",

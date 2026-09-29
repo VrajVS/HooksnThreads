@@ -11,8 +11,8 @@ export function ProductsSection() {
         <p className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">
           Our Catalogue
         </p>
-        <h2 className="mt-3 text-3xl font-semibold md:text-4xl lg:text-5xl">
-          Handcrafted Pieces Made Just For You
+        <h2 className="display mt-3 text-4xl md:text-5xl lg:text-6xl">
+          Handcrafted Pieces <em>Made Just For You</em>
         </h2>
       </div>
 

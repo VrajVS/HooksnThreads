@@ -55,8 +55,10 @@ export function HeroSection() {
             </span>
           </div>
 
-          <h1 className="font-brand text-4xl font-semibold leading-tight md:text-5xl lg:text-6xl">
-            Handmade Elegance, Stitch by Stitch
+          <h1 className="display text-5xl md:text-6xl lg:text-7xl">
+            Handmade Elegance,{" "}
+            <br className="hidden sm:block" />
+            <em>stitch by stitch.</em>
           </h1>
 
           <div className="mt-8 flex flex-col gap-4">

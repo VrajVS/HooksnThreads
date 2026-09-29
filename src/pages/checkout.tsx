@@ -23,7 +23,7 @@ export function CheckoutPage() {
     <div className="min-h-screen bg-background">
       <Navbar />
       <main className="container py-12 md:py-16">
-        <h1 className="font-brand text-3xl font-semibold md:text-4xl">Checkout</h1>
+        <h1 className="display text-4xl md:text-5xl">Checkout</h1>
 
         {items.length === 0 ? (
           <div className="mt-8 flex max-w-xl flex-col items-start gap-4 rounded-3xl bg-white p-8 shadow-[2px_4px_12px_rgba(0,0,0,0.08)]">

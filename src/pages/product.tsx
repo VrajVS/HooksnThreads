@@ -9,6 +9,7 @@ import { GradientButton } from "@/components/gradient-button";
 import { RecentlyViewed } from "@/components/recently-viewed";
 import { useCart } from "@/context/cart-context";
 import { useWishlist } from "@/context/wishlist-context";
+import { useBuyNow } from "@/hooks/use-buy-now";
 import { useProduct } from "@/hooks/use-product";
 import { useRecentlyViewed } from "@/hooks/use-recently-viewed";
 import { INSTAGRAM_URL } from "@/data/site-data";
@@ -25,6 +26,7 @@ export function ProductPage() {
   const navigate = useNavigate();
   const { product, loading, notFound } = useProduct(handle);
   const { addItem } = useCart();
+  const buyNow = useBuyNow();
   const { isWishlisted, toggleWishlist } = useWishlist();
   const { track } = useRecentlyViewed();
   const [quantity, setQuantity] = useState(1);
@@ -46,7 +48,7 @@ export function ProductPage() {
       <div className="min-h-screen bg-background">
         <Navbar />
         <div className="container flex flex-col items-center gap-4 py-32 text-center">
-          <h1 className="font-brand text-3xl font-semibold">Product not found</h1>
+          <h1 className="display text-4xl">Product not found</h1>
           <Link to="/" className="text-sm font-medium underline">
             Back to home
           </Link>
@@ -89,7 +91,7 @@ export function ProductPage() {
 
         <div className="flex flex-col justify-center">
           <div className="flex items-start justify-between gap-4">
-            <h1 className="font-brand text-4xl font-semibold md:text-5xl">
+            <h1 className="display text-5xl md:text-6xl">
               {product.title}
             </h1>
             <button
@@ -122,7 +124,7 @@ export function ProductPage() {
             ))}
           </div>
 
-          <div className="mt-8 flex items-center gap-4">
+          <div className="mt-8 flex flex-wrap items-center gap-3 sm:gap-4">
             <div className="flex items-center gap-3 rounded-full border border-border px-3 py-2">
               <button
                 aria-label="Decrease quantity"
@@ -159,6 +161,23 @@ export function ProductPage() {
               }}
             >
               {added ? "Added to Cart" : "Add to Cart"}
+            </Button>
+            <Button
+              size="lg"
+              className="flex-1 bg-brand-navy text-white hover:bg-brand-navy/90"
+              onClick={() =>
+                buyNow(
+                  {
+                    handle: product.handle,
+                    title: product.title,
+                    price: product.price,
+                    image: product.image,
+                  },
+                  quantity,
+                )
+              }
+            >
+              Buy Now
             </Button>
           </div>
 

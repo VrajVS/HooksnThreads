@@ -24,6 +24,7 @@ import { TermsOfServicePage } from "@/pages/legal/terms-of-service";
 import { RefundPolicyPage } from "@/pages/legal/refund-policy";
 import { ShippingPolicyPage } from "@/pages/legal/shipping-policy";
 import { AdminLoginPage } from "@/pages/admin/login";
+import { AdminDashboardPage } from "@/pages/admin/dashboard";
 import { AdminProductsPage } from "@/pages/admin/products";
 import { AdminProductFormPage } from "@/pages/admin/product-form";
 import { AdminCategoriesPage } from "@/pages/admin/categories";
@@ -33,6 +34,7 @@ import { AdminAccessoryFormPage } from "@/pages/admin/accessory-form";
 import { AdminOrdersPage } from "@/pages/admin/orders";
 import { AdminOrderFormPage } from "@/pages/admin/order-form";
 import { AdminOrderDetailPage } from "@/pages/admin/order-detail";
+import { AdminOrderInvoicePage } from "@/pages/admin/order-invoice";
 import { AdminUsersPage } from "@/pages/admin/users";
 import { AdminUserFormPage } from "@/pages/admin/user-form";
 import { AdminRolesPage } from "@/pages/admin/roles";
@@ -82,7 +84,8 @@ function App() {
         <Route path="/shipping-policy" element={<ShippingPolicyPage />} />
 
         <Route path="/admin/login" element={<AdminLoginPage />} />
-        <Route path="/admin" element={<AdminProductsPage />} />
+        <Route path="/admin" element={<AdminDashboardPage />} />
+        <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
         <Route path="/admin/products" element={<AdminProductsPage />} />
         <Route path="/admin/products/new" element={<AdminProductFormPage />} />
         <Route path="/admin/products/:handle/edit" element={<AdminProductFormPage />} />
@@ -95,6 +98,8 @@ function App() {
         <Route path="/admin/orders" element={<AdminOrdersPage />} />
         <Route path="/admin/orders/new" element={<AdminOrderFormPage />} />
         <Route path="/admin/orders/:id" element={<AdminOrderDetailPage />} />
+        <Route path="/admin/orders/:id/edit" element={<AdminOrderFormPage />} />
+        <Route path="/admin/orders/:id/invoice" element={<AdminOrderInvoicePage />} />
         <Route path="/admin/users" element={<AdminUsersPage />} />
         <Route path="/admin/users/new" element={<AdminUserFormPage />} />
         <Route path="/admin/users/:id/edit" element={<AdminUserFormPage />} />

@@ -10,6 +10,7 @@ from app.routers import (
     admin_accessories,
     admin_auth,
     admin_categories,
+    admin_dashboard,
     admin_orders,
     admin_products,
     admin_roles,
@@ -44,6 +45,7 @@ app.include_router(admin_categories.router)
 app.include_router(admin_products.router)
 app.include_router(admin_accessories.router)
 app.include_router(admin_orders.router)
+app.include_router(admin_dashboard.router)
 app.include_router(orders.router)
 app.include_router(admin_users.router)
 app.include_router(admin_roles.router)

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLocation } from "react-router-dom";
 import { Mail } from "lucide-react";
 import { toast } from "sonner";
 
@@ -7,9 +8,12 @@ import { ApiError } from "@/lib/api";
 
 export function VerificationBanner() {
   const { user, resendVerification } = useAuth();
+  const { pathname } = useLocation();
   const [sending, setSending] = useState(false);
 
-  if (!user || user.email_verified) return null;
+  // This is the storefront customer's session; the admin panel has its own
+  // login, so a customer logged in on the same browser mustn't leak in there.
+  if (!user || user.email_verified || pathname.startsWith("/admin")) return null;
 
   const handleResend = async () => {
     setSending(true);

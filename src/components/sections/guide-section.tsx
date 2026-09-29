@@ -10,8 +10,8 @@ export function GuideSection() {
     <section className="bg-background py-28">
       <div className="container">
         <div className="mx-auto flex max-w-2xl flex-col items-center text-center">
-          <h2 className="text-3xl font-semibold md:text-4xl lg:text-5xl">
-            Your guide to the Hooks &amp; Threads catalogue.
+          <h2 className="display text-4xl md:text-5xl lg:text-6xl">
+            Your guide to the <em>Hooks &amp; Threads</em> catalogue.
           </h2>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
             <Button asChild size="lg">

@@ -13,7 +13,7 @@ const socialIcons = [{ Icon: InstagramIcon, label: "Instagram", href: INSTAGRAM_
 
 export function Footer() {
   return (
-    <footer className="bg-zinc-900 py-16 text-white">
+    <footer className="bg-brand-navy py-16 text-white">
       <div className="container">
         <div className="grid gap-12 lg:grid-cols-2">
           <div>
