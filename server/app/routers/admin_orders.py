@@ -18,8 +18,11 @@ from app.orders import (
     change_status,
     insert_order,
     load_order,
+    log_event,
     next_invoice_number,
+    order_stage,
     shortage_response,
+    tracking_stage,
     update_order,
 )
 
@@ -377,6 +380,18 @@ def get_order(
             (order_id,),
         )
         order["movements"] = cur.fetchall()
+        cur.execute(
+            """
+            SELECT e.id, e.kind, e.from_value, e.to_value, e.detail, e.actor, e.created_at,
+                   s.full_name AS admin_name
+            FROM order_events e
+            LEFT JOIN store_users s ON s.id = e.admin_id
+            WHERE e.order_id = %s
+            ORDER BY e.created_at, e.id
+            """,
+            (order_id,),
+        )
+        order["events"] = cur.fetchall()
 
     # What confirming would take right now (only meaningful before deduction).
     order["requirements"] = (
@@ -411,10 +426,13 @@ def create_order(
             payment_mode=body.payment_mode,
             admin_id=admin["id"],
         )
+        log_event(conn, order_id, "created", to_value="pending",
+                  detail="Entered in the admin panel", admin_id=admin["id"])
         if body.payment:
             _add_payment(conn, order_id, body.payment, admin["id"])
         if body.status == "confirmed":
             change_status(conn, order_id, "confirmed", admin["id"], body.allow_shortage)
+        log_event(conn, order_id, "stage", to_value=order_stage(conn, order_id), admin_id=admin["id"])
         conn.commit()
     except ShortageError as err:
         conn.rollback()
@@ -438,22 +456,25 @@ def edit_order(
             current = cur.fetchone()
         if current is None:
             raise HTTPException(status_code=404, detail="Order not found")
-        update_order(
-            conn,
-            order_id,
-            invoice_number=_clean(body.invoice_number) or current[0],
-            order_date=body.order_date or current[1],
-            customer_name=body.customer_name.strip(),
-            customer_phone=_clean(body.customer_phone),
-            customer_email=_clean(body.customer_email),
-            shipping_address=_clean(body.shipping_address),
-            notes=_clean(body.notes),
-            lines=_lines(body.items),
-            charges=_charges(body.charges),
-            payment_mode=body.payment_mode,
-            admin_id=admin["id"],
-            allow_shortage=body.allow_shortage,
-        )
+        with tracking_stage(conn, order_id, admin["id"]):
+            update_order(
+                conn,
+                order_id,
+                invoice_number=_clean(body.invoice_number) or current[0],
+                order_date=body.order_date or current[1],
+                customer_name=body.customer_name.strip(),
+                customer_phone=_clean(body.customer_phone),
+                customer_email=_clean(body.customer_email),
+                shipping_address=_clean(body.shipping_address),
+                notes=_clean(body.notes),
+                lines=_lines(body.items),
+                charges=_charges(body.charges),
+                payment_mode=body.payment_mode,
+                admin_id=admin["id"],
+                allow_shortage=body.allow_shortage,
+            )
+            log_event(conn, order_id, "edited", detail="Order details, items or charges edited",
+                      admin_id=admin["id"])
         conn.commit()
     except ShortageError as err:
         conn.rollback()
@@ -472,7 +493,8 @@ def update_status(
     admin: dict = Depends(require_permission("orders.update")),
 ):
     try:
-        change_status(conn, order_id, body.status, admin["id"], body.allow_shortage)
+        with tracking_stage(conn, order_id, admin["id"]):
+            change_status(conn, order_id, body.status, admin["id"], body.allow_shortage)
         conn.commit()
     except ShortageError as err:
         conn.rollback()
@@ -488,18 +510,33 @@ def update_delivery(
     order_id: int,
     body: DeliveryBody,
     conn: Connection = Depends(get_conn),
-    _admin: dict = Depends(require_permission("orders.update")),
+    admin: dict = Depends(require_permission("orders.update")),
 ):
     with conn.cursor() as cur:
         cur.execute(
-            """
-            UPDATE orders SET delivered = %s, delivery_date = %s, updated_at = now()
-            WHERE id = %s AND status <> 'cancelled'
-            """,
-            (body.delivered, body.delivery_date, order_id),
+            "SELECT delivered, delivery_date FROM orders WHERE id = %s AND status <> 'cancelled'",
+            (order_id,),
         )
-        if cur.rowcount == 0:
-            raise HTTPException(status_code=404, detail="Order not found or cancelled")
+        before = cur.fetchone()
+    if before is None:
+        raise HTTPException(status_code=404, detail="Order not found or cancelled")
+    with tracking_stage(conn, order_id, admin["id"]):
+        with conn.cursor() as cur:
+            cur.execute(
+                "UPDATE orders SET delivered = %s, delivery_date = %s, updated_at = now() WHERE id = %s",
+                (body.delivered, body.delivery_date, order_id),
+            )
+        was_delivered, old_date = before
+        if was_delivered != body.delivered:
+            log_event(conn, order_id, "delivery",
+                      to_value="delivered" if body.delivered else "not_delivered",
+                      detail=body.delivery_date.isoformat() if body.delivery_date else None,
+                      admin_id=admin["id"])
+        elif old_date != body.delivery_date:
+            log_event(conn, order_id, "delivery_date",
+                      from_value=old_date.isoformat() if old_date else None,
+                      to_value=body.delivery_date.isoformat() if body.delivery_date else None,
+                      admin_id=admin["id"])
     conn.commit()
     return {"ok": True}
 
@@ -510,8 +547,17 @@ def update_item_progress(
     item_id: int,
     body: ItemProgressBody,
     conn: Connection = Depends(get_conn),
-    _admin: dict = Depends(require_permission("orders.update")),
+    admin: dict = Depends(require_permission("orders.update")),
 ):
+    with conn.cursor() as cur:
+        cur.execute(
+            "SELECT title, prepared, work_note FROM order_items WHERE id = %s AND order_id = %s",
+            (item_id, order_id),
+        )
+        before = cur.fetchone()
+    if before is None:
+        raise HTTPException(status_code=404, detail="Item not found")
+    title, was_prepared, old_note = before
     sets, params = [], []
     if body.prepared is not None:
         sets.append("prepared = %s")
@@ -521,14 +567,20 @@ def update_item_progress(
         params.append(_clean(body.work_note))
     if not sets:
         return {"ok": True}
-    with conn.cursor() as cur:
-        cur.execute(
-            f"UPDATE order_items SET {', '.join(sets)} WHERE id = %s AND order_id = %s",
-            [*params, item_id, order_id],
-        )
-        if cur.rowcount == 0:
-            raise HTTPException(status_code=404, detail="Item not found")
-        cur.execute("UPDATE orders SET updated_at = now() WHERE id = %s", (order_id,))
+    with tracking_stage(conn, order_id, admin["id"]):
+        with conn.cursor() as cur:
+            cur.execute(
+                f"UPDATE order_items SET {', '.join(sets)} WHERE id = %s AND order_id = %s",
+                [*params, item_id, order_id],
+            )
+            cur.execute("UPDATE orders SET updated_at = now() WHERE id = %s", (order_id,))
+        if body.prepared is not None and body.prepared != was_prepared:
+            log_event(conn, order_id, "item_prepared" if body.prepared else "item_unprepared",
+                      detail=title, admin_id=admin["id"])
+        new_note = _clean(body.work_note) if body.work_note is not None else old_note
+        if body.work_note is not None and new_note != old_note:
+            log_event(conn, order_id, "work_note", from_value=old_note, to_value=new_note,
+                      detail=title, admin_id=admin["id"])
     conn.commit()
     return {"ok": True}
 
@@ -545,7 +597,10 @@ def add_payment(
         row = cur.fetchone()
     if row is None:
         raise HTTPException(status_code=404, detail="Order not found")
-    _add_payment(conn, order_id, body, admin["id"])
+    with tracking_stage(conn, order_id, admin["id"]):
+        _add_payment(conn, order_id, body, admin["id"])
+        log_event(conn, order_id, "payment_added", to_value=str(body.amount), detail=body.mode,
+                  admin_id=admin["id"])
     conn.commit()
     return {"ok": True}
 
@@ -555,14 +610,19 @@ def delete_payment(
     order_id: int,
     payment_id: int,
     conn: Connection = Depends(get_conn),
-    _admin: dict = Depends(require_permission("orders.update")),
+    admin: dict = Depends(require_permission("orders.update")),
 ):
-    with conn.cursor() as cur:
-        cur.execute(
-            "DELETE FROM order_payments WHERE id = %s AND order_id = %s", (payment_id, order_id)
-        )
-        if cur.rowcount == 0:
+    with tracking_stage(conn, order_id, admin["id"]):
+        with conn.cursor() as cur:
+            cur.execute(
+                "DELETE FROM order_payments WHERE id = %s AND order_id = %s RETURNING amount, mode",
+                (payment_id, order_id),
+            )
+            row = cur.fetchone()
+        if row is None:
             raise HTTPException(status_code=404, detail="Payment not found")
+        log_event(conn, order_id, "payment_removed", to_value=str(row[0]), detail=row[1],
+                  admin_id=admin["id"])
     conn.commit()
 
 

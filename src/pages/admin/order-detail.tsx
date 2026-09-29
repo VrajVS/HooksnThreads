@@ -26,6 +26,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { AdminLayout } from "@/components/admin-layout";
+import { OrderActivity, type OrderEvent, StageTracker } from "@/components/order-timeline";
 import { ShortageDialog, shortagesFromError } from "@/components/shortage-dialog";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -82,6 +83,7 @@ export interface OrderDetail {
   charges: OrderCharge[];
   payments: OrderPayment[];
   requirements: Requirement[];
+  events: OrderEvent[];
   movements: {
     id: number;
     change: Qty;
@@ -244,6 +246,10 @@ export function AdminOrderDetailPage() {
         </div>
       </div>
 
+      <div className="mt-6">
+        <StageTracker stage={order.stage} events={order.events} />
+      </div>
+
       <div className="mt-6 flex flex-col gap-6 xl:flex-row xl:items-start">
         <div className="flex w-full min-w-0 max-w-3xl flex-col gap-6">
           <section className="rounded-2xl bg-white p-6 shadow-sm">
@@ -305,6 +311,8 @@ export function AdminOrderDetailPage() {
               </div>
             )}
           </section>
+
+          <OrderActivity events={order.events} />
         </div>
 
         <aside className="flex w-full max-w-3xl flex-col gap-6 xl:max-w-sm">

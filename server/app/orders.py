@@ -1,3 +1,4 @@
+from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import date
 
@@ -47,6 +48,45 @@ ORDER_TOTALS_CTE = """
         FROM order_totals t
     )
 """
+
+
+def order_stage(conn: Connection, order_id: int) -> str | None:
+    with conn.cursor() as cur:
+        cur.execute(f"{ORDER_TOTALS_CTE} SELECT stage FROM staged WHERE id = %s", (order_id,))
+        row = cur.fetchone()
+    return row[0] if row else None
+
+
+def log_event(
+    conn: Connection,
+    order_id: int,
+    kind: str,
+    *,
+    from_value: str | None = None,
+    to_value: str | None = None,
+    detail: str | None = None,
+    admin_id: int | None = None,
+    actor: str | None = None,
+) -> None:
+    with conn.cursor() as cur:
+        cur.execute(
+            """
+            INSERT INTO order_events (order_id, kind, from_value, to_value, detail, admin_id, actor)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+            """,
+            (order_id, kind, from_value, to_value, detail, admin_id, actor),
+        )
+
+
+@contextmanager
+def tracking_stage(conn: Connection, order_id: int, admin_id: int | None = None, actor: str | None = None):
+    """Logs a 'stage' event if the work inside the block moves the order to a
+    different stage of the colour key (the stage is derived, never stored)."""
+    before = order_stage(conn, order_id)
+    yield
+    after = order_stage(conn, order_id)
+    if after is not None and after != before:
+        log_event(conn, order_id, "stage", from_value=before, to_value=after, admin_id=admin_id, actor=actor)
 
 
 @dataclass
@@ -336,6 +376,8 @@ def change_status(
             "UPDATE orders SET status = %s, updated_at = now() WHERE id = %s",
             (new_status, order_id),
         )
+    log_event(conn, order_id, "status", from_value=current, to_value=new_status, admin_id=admin_id)
+    with conn.cursor() as cur:
         if new_status == "completed":
             cur.execute("UPDATE order_items SET prepared = true WHERE order_id = %s", (order_id,))
             cur.execute(

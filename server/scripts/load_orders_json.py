@@ -24,6 +24,7 @@ import psycopg
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent))
 
 from app.config import DATABASE_URL
+from app.orders import log_event, order_stage
 
 TAG = "Imported from Crochet Orders.xlsx"
 
@@ -111,6 +112,8 @@ def main():
                  subtotal, charges_total, o["delivered"], o["delivery_date"], o["payment_mode"], created),
             )
             order_id = cur.fetchone()[0]
+            log_event(conn, order_id, "imported", to_value=o["status"],
+                      detail="Imported from the order spreadsheet", actor="import")
             for i in items:
                 handle = aliases.get(squash(i["title"]))
                 lines += 1
@@ -138,6 +141,7 @@ def main():
                     (order_id, round(p["amount"]), p["mode"], o["delivery_date"] or o["order_date"],
                      p.get("note")),
                 )
+            log_event(conn, order_id, "stage", to_value=order_stage(conn, order_id), actor="import")
 
         print(f"loaded {len(orders)} orders, {lines} item lines "
               f"({linked} linked to catalogue products, {lines - linked} kept as custom items)")

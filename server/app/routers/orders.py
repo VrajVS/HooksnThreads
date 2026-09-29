@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field
 
 from app.db import get_conn
 from app.deps import require_customer
-from app.orders import Line, insert_order, load_order
+from app.orders import Line, insert_order, load_order, log_event, order_stage
 
 router = APIRouter(prefix="/api/orders", tags=["orders"])
 
@@ -56,6 +56,9 @@ def place_order(
             # Prices always come from the DB, never from the client's cart.
             lines=[Line(line.handle, None, line.quantity, None) for line in body.items],
         )
+        log_event(conn, order_id, "created", to_value="pending", detail="Placed on the website",
+                  actor="customer")
+        log_event(conn, order_id, "stage", to_value=order_stage(conn, order_id), actor="customer")
         conn.commit()
     except Exception:
         conn.rollback()
