@@ -26,6 +26,7 @@ import { useCart } from "@/context/cart-context";
 import { useCompare } from "@/context/compare-context";
 import { useWishlist } from "@/context/wishlist-context";
 import { useCategories } from "@/hooks/use-categories";
+import { useGridColumns } from "@/hooks/use-grid-columns";
 import { INSTAGRAM_URL, type Product } from "@/data/site-data";
 import { cn } from "@/lib/utils";
 
@@ -55,7 +56,9 @@ const PRICE_CHIPS: { label: string; min: number; max: number }[] = [
   { label: "Above ₹1000", min: 1000, max: 0 },
 ];
 
-const PAGE_SIZE = 12;
+// About this many pieces per page, rounded up to whole grid rows so every
+// full page fills its last row (12 at 2/3/4 columns, 15 at 5).
+const TARGET_PAGE_SIZE = 12;
 
 interface Props {
   title: React.ReactNode;
@@ -81,6 +84,7 @@ export function ProductListing({
   const [bulkMode, setBulkMode] = useState(false);
   const [selectedForBulk, setSelectedForBulk] = useState<Set<string>>(new Set());
   const { addItem } = useCart();
+  const columns = useGridColumns();
 
   // URL-backed state — filter/sort/view/page all in the address bar.
   const selectedCats = (searchParams.get("cat") ?? "")
@@ -180,10 +184,11 @@ export function ProductListing({
     return list;
   }, [products, selectedCats, minPrice, maxPrice, featuredOnly, localSearch, sort]);
 
-  const totalPages = Math.max(1, Math.ceil(shown.length / PAGE_SIZE));
+  const pageSize = view === "list" ? TARGET_PAGE_SIZE : columns * Math.ceil(TARGET_PAGE_SIZE / columns);
+  const totalPages = Math.max(1, Math.ceil(shown.length / pageSize));
   const currentPage = Math.min(page, totalPages);
-  const pageStart = (currentPage - 1) * PAGE_SIZE;
-  const paged = shown.slice(pageStart, pageStart + PAGE_SIZE);
+  const pageStart = (currentPage - 1) * pageSize;
+  const paged = shown.slice(pageStart, pageStart + pageSize);
 
   function setPage(n: number) {
     const next = new URLSearchParams(searchParams);
