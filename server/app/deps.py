@@ -61,8 +61,14 @@ def _load_admin(conn: Connection, admin_id: int) -> dict | None:
     }
 
 
+def _bearer_token(request: Request) -> str | None:
+    scheme, _, token = request.headers.get("authorization", "").partition(" ")
+    return token.strip() or None if scheme.lower() == "bearer" else None
+
+
 def require_admin(request: Request, conn: Connection = Depends(get_conn)) -> dict:
-    token = request.cookies.get(ADMIN_COOKIE_NAME)
+    # The admin panel sends a cookie; the Android orders app sends a bearer token.
+    token = request.cookies.get(ADMIN_COOKIE_NAME) or _bearer_token(request)
     admin_id = decode_token(token, "admin") if token else None
     if admin_id is None:
         raise HTTPException(status_code=401, detail="Not authenticated")

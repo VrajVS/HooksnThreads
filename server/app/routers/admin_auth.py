@@ -4,7 +4,7 @@ from pydantic import BaseModel, EmailStr
 
 from app.config import ADMIN_COOKIE_NAME, COOKIE_SECURE
 from app.db import get_conn
-from app.deps import require_admin
+from app.deps import _load_admin, require_admin
 from app.security import create_token, hash_password, verify_password
 
 router = APIRouter(prefix="/api/admin/auth", tags=["admin-auth"])
@@ -22,8 +22,7 @@ class ChangePasswordBody(BaseModel):
     new_password: str
 
 
-@router.post("/login")
-def admin_login(body: AdminLoginBody, response: Response, conn: Connection = Depends(get_conn)):
+def _check_credentials(conn: Connection, body: AdminLoginBody) -> tuple:
     with conn.cursor() as cur:
         cur.execute(
             "SELECT id, password_hash, full_name FROM store_users WHERE email = %s",
@@ -33,10 +32,22 @@ def admin_login(body: AdminLoginBody, response: Response, conn: Connection = Dep
 
     if row is None or not verify_password(body.password, row[1]):
         raise HTTPException(status_code=401, detail="Invalid email or password")
+    return row
 
+
+@router.post("/login")
+def admin_login(body: AdminLoginBody, response: Response, conn: Connection = Depends(get_conn)):
+    row = _check_credentials(conn, body)
     token = create_token(row[0], "admin")
     response.set_cookie(ADMIN_COOKIE_NAME, token, **COOKIE_KWARGS)
     return {"id": row[0], "email": body.email, "full_name": row[2]}
+
+
+@router.post("/token")
+def admin_token(body: AdminLoginBody, conn: Connection = Depends(get_conn)):
+    """Login for the Android orders app, which keeps the token itself instead of a cookie."""
+    row = _check_credentials(conn, body)
+    return {"token": create_token(row[0], "admin"), "admin": _load_admin(conn, row[0])}
 
 
 @router.post("/logout")
