@@ -8,12 +8,15 @@ import { Footer } from "@/components/footer";
 import { Button } from "@/components/ui/button";
 import { GradientButton } from "@/components/gradient-button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { RazorpayCheckout } from "@/components/razorpay-checkout";
 import { useAuth } from "@/context/auth-context";
 import { useCart } from "@/context/cart-context";
 import { useAddresses } from "@/hooks/use-addresses";
 import { INSTAGRAM_URL } from "@/data/site-data";
 import { ApiError, api } from "@/lib/api";
 import { cn } from "@/lib/utils";
+
+export type CartLine = { handle: string; quantity: number };
 
 export function CheckoutPage() {
   const { items, subtotal, clearCart } = useCart();
@@ -97,12 +100,14 @@ export function CheckoutPage() {
 
 function PlaceOrderForm({ onPlaced }: { onPlaced: () => void }) {
   const navigate = useNavigate();
-  const { items } = useCart();
+  const { items, subtotal } = useCart();
+  const { user } = useAuth();
   const { addresses, loading } = useAddresses();
   const [addressId, setAddressId] = useState<number | null>(null);
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState<"later" | "razorpay">("later");
 
   useEffect(() => {
     if (addressId === null && addresses.length > 0) {
@@ -208,20 +213,74 @@ function PlaceOrderForm({ onPlaced }: { onPlaced: () => void }) {
         />
       </div>
 
+      <fieldset className="flex flex-col gap-3">
+        <legend className="text-lg font-semibold">Payment</legend>
+        <label className={cn(
+          "flex cursor-pointer gap-3 rounded-2xl border p-4 text-sm transition-colors",
+          paymentMethod === "later" ? "border-foreground bg-secondary" : "border-border hover:bg-secondary/50",
+        )}>
+          <input
+            type="radio"
+            name="payment"
+            value="later"
+            checked={paymentMethod === "later"}
+            onChange={() => setPaymentMethod("later")}
+            className="mt-1"
+          />
+          <span>
+            <span className="font-medium">Pay later</span>
+            <span className="block text-muted-foreground">Every piece is handmade, so we'll confirm your order and share payment details with you before we start.</span>
+          </span>
+        </label>
+        <label className={cn(
+          "flex cursor-pointer gap-3 rounded-2xl border p-4 text-sm transition-colors",
+          paymentMethod === "razorpay" ? "border-foreground bg-secondary" : "border-border hover:bg-secondary/50",
+        )}>
+          <input
+            type="radio"
+            name="payment"
+            value="razorpay"
+            checked={paymentMethod === "razorpay"}
+            onChange={() => setPaymentMethod("razorpay")}
+            className="mt-1"
+          />
+          <span>
+            <span className="font-medium">Pay now with Razorpay</span>
+            <span className="block text-muted-foreground">Secure online payment. Order confirmed immediately after payment.</span>
+          </span>
+        </label>
+      </fieldset>
+
       <div className="flex flex-col gap-3">
-        <GradientButton
-          type="submit"
-          disabled={submitting || addresses.length === 0}
-          className="self-start disabled:pointer-events-none disabled:opacity-50"
-          innerClassName="px-10"
-        >
-          {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
-          {submitting ? "Placing order..." : "Place order"}
-        </GradientButton>
-        <p className="text-sm text-muted-foreground">
-          No payment now. Every piece is handmade, so we'll confirm your order and share payment
-          details with you before we start.
-        </p>
+        {paymentMethod === "razorpay" ? (
+          <>
+            {addressId && user && (
+              <RazorpayCheckout
+                items={items.map((i) => ({ handle: i.handle, quantity: i.quantity }))}
+                addressId={addressId}
+                notes={notes.trim() || null}
+                total={subtotal}
+                email={user.email}
+                phone={user.phone || undefined}
+                onOrderPlaced={(orderId) => {
+                  onPlaced();
+                  toast.success(`Order #${orderId} placed and paid`);
+                  navigate("/account/orders", { state: { placed: orderId } });
+                }}
+              />
+            )}
+          </>
+        ) : (
+          <GradientButton
+            type="submit"
+            disabled={submitting || addresses.length === 0}
+            className="self-start disabled:pointer-events-none disabled:opacity-50"
+            innerClassName="px-10"
+          >
+            {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
+            {submitting ? "Placing order..." : "Place order"}
+          </GradientButton>
+        )}
       </div>
     </form>
   );
