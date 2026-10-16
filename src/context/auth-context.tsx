@@ -68,12 +68,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await api.post("/auth/resend-verification");
   }, []);
 
-  const value = React.useMemo(
-    () => ({ user, loading, login, signup, logout, refresh, resendVerification }),
-    [user, loading, login, signup, logout, refresh, resendVerification],
+  return (
+    <AuthContext.Provider value={{ user, loading, login, signup, logout, refresh, resendVerification }}>
+      {children}
+    </AuthContext.Provider>
   );
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {

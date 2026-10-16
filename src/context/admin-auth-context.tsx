@@ -43,12 +43,11 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
     setAdmin(null);
   }, []);
 
-  const value = React.useMemo(
-    () => ({ admin, loading, login, logout }),
-    [admin, loading, login, logout],
+  return (
+    <AdminAuthContext.Provider value={{ admin, loading, login, logout }}>
+      {children}
+    </AdminAuthContext.Provider>
   );
-
-  return <AdminAuthContext.Provider value={value}>{children}</AdminAuthContext.Provider>;
 }
 
 export function useAdminAuth() {

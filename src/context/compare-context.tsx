@@ -52,13 +52,10 @@ export function CompareProvider({ children }: { children: React.ReactNode }) {
 
   const clear = React.useCallback(() => setHandles([]), []);
 
-  const value = React.useMemo(
-    () => ({ handles, isSelected, toggle, clear, max: MAX }),
-    [handles, isSelected, toggle, clear],
-  );
-
   return (
-    <CompareContext.Provider value={value}>{children}</CompareContext.Provider>
+    <CompareContext.Provider value={{ handles, isSelected, toggle, clear, max: MAX }}>
+      {children}
+    </CompareContext.Provider>
   );
 }
 

@@ -37,13 +37,10 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
     );
   }, []);
 
-  const value = React.useMemo(
-    () => ({ handles, isWishlisted, toggleWishlist }),
-    [handles, isWishlisted, toggleWishlist],
-  );
-
   return (
-    <WishlistContext.Provider value={value}>{children}</WishlistContext.Provider>
+    <WishlistContext.Provider value={{ handles, isWishlisted, toggleWishlist }}>
+      {children}
+    </WishlistContext.Provider>
   );
 }
 
