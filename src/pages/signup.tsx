@@ -69,8 +69,8 @@ export function SignupPage() {
         accept_terms: acceptTerms,
         marketing_opt_in: marketingOptIn,
       });
-      toast.success("Account created — check your email to verify");
-      navigate(next);
+      toast.success("Account created — enter the OTP from your email");
+      navigate("/verify-email");
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Something went wrong");
     } finally {

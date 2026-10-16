@@ -4,6 +4,7 @@ import { CheckCircle2, Loader2, XCircle } from "lucide-react";
 
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
+import { Button } from "@/components/ui/button";
 import { api, ApiError } from "@/lib/api";
 import { useAuth } from "@/context/auth-context";
 
@@ -11,15 +12,18 @@ type State =
   | { kind: "pending" }
   | { kind: "ok" }
   | { kind: "error"; message: string }
-  | { kind: "no-token" };
+  | { kind: "no-token" }
+  | { kind: "input-otp" };
 
 export function VerifyEmailPage() {
   const [params] = useSearchParams();
   const { refresh } = useAuth();
   const token = params.get("token")?.trim() ?? "";
   const [state, setState] = useState<State>(
-    token ? { kind: "pending" } : { kind: "no-token" },
+    token ? { kind: "pending" } : { kind: "input-otp" },
   );
+  const [otp, setOtp] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     if (!token) return;
@@ -36,6 +40,30 @@ export function VerifyEmailPage() {
         });
       });
   }, [token, refresh]);
+
+  const handleOtpSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!otp.trim() || otp.length !== 6) {
+      setState({
+        kind: "error",
+        message: "Please enter a valid 6-digit OTP",
+      });
+      return;
+    }
+    setSubmitting(true);
+    try {
+      await api.post("/auth/verify-email", { token: otp });
+      await refresh();
+      setState({ kind: "ok" });
+    } catch (err) {
+      setState({
+        kind: "error",
+        message: err instanceof ApiError ? err.message : "Verification failed",
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -84,6 +112,31 @@ export function VerifyEmailPage() {
               >
                 Log in
               </Link>
+            </>
+          )}
+          {state.kind === "input-otp" && (
+            <>
+              <h1 className="display text-3xl">
+                Verify your email
+              </h1>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Enter the 6-digit OTP we sent to your email
+              </p>
+              <form onSubmit={handleOtpSubmit} className="mt-6 flex flex-col gap-4">
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={6}
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
+                  placeholder="000000"
+                  className="rounded-full border border-border bg-background px-4 py-3 text-center text-2xl font-mono tracking-widest focus:outline-none focus:ring-1 focus:ring-ring"
+                />
+                <Button type="submit" disabled={submitting || otp.length !== 6} size="lg">
+                  {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
+                  {submitting ? "Verifying..." : "Verify"}
+                </Button>
+              </form>
             </>
           )}
           {state.kind === "no-token" && (

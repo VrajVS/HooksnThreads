@@ -1,4 +1,6 @@
 import logging
+import os
+import random
 import re
 import secrets
 from datetime import datetime, timedelta, timezone
@@ -11,6 +13,7 @@ from pydantic import BaseModel, EmailStr, Field, field_validator
 from app.config import COOKIE_SECURE, CUSTOMER_COOKIE_NAME, PUBLIC_URL
 from app.db import get_conn
 from app.deps import require_customer
+from app.email import send_otp_email
 from app.security import create_token, hash_password, verify_password
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
@@ -55,23 +58,19 @@ class VerifyBody(BaseModel):
     token: str
 
 
-def _issue_verification_token(conn: Connection, customer_id: int, email: str) -> str:
-    token = secrets.token_urlsafe(32)
-    expires = datetime.now(timezone.utc) + VERIFICATION_TTL
+def _issue_verification_token(conn: Connection, customer_id: int, email: str, customer_name: str) -> str:
+    otp = "".join(str(random.randint(0, 9)) for _ in range(6))
+    expires = datetime.now(timezone.utc) + timedelta(minutes=int(os.getenv("OTP_EXPIRY_MINUTES", "10")))
     with conn.cursor() as cur:
-        # One live token at a time per customer — cheaper than juggling many.
         cur.execute("DELETE FROM email_verification_tokens WHERE customer_id = %s", (customer_id,))
         cur.execute(
             "INSERT INTO email_verification_tokens (token, customer_id, expires_at) VALUES (%s, %s, %s)",
-            (token, customer_id, expires),
+            (otp, customer_id, expires),
         )
     conn.commit()
-    # No SMTP wired up in this project — log the link so it can be copied
-    # from the uvicorn console during development. Replace this with a real
-    # send when an email provider is configured.
-    link = f"{PUBLIC_URL}/verify-email?token={token}"
-    log.warning("Email verification link for %s: %s", email, link)
-    return token
+    send_otp_email(email, otp, customer_name)
+    log.info("OTP sent to %s", email)
+    return otp
 
 
 @router.post("/signup")
@@ -102,7 +101,7 @@ def signup(body: SignupBody, response: Response, conn: Connection = Depends(get_
         conn.rollback()
         raise HTTPException(status_code=409, detail="An account with this email already exists")
 
-    _issue_verification_token(conn, user_id, body.email.lower())
+    _issue_verification_token(conn, user_id, body.email.lower(), body.full_name)
 
     token = create_token(user_id, "customer")
     response.set_cookie(CUSTOMER_COOKIE_NAME, token, **COOKIE_KWARGS)
@@ -182,5 +181,5 @@ def verify_email(body: VerifyBody, conn: Connection = Depends(get_conn)):
 def resend_verification(user: dict = Depends(require_customer), conn: Connection = Depends(get_conn)):
     if user.get("email_verified"):
         return {"ok": True, "already_verified": True}
-    _issue_verification_token(conn, user["id"], user["email"])
+    _issue_verification_token(conn, user["id"], user["email"], user["full_name"])
     return {"ok": True}
