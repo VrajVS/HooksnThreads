@@ -1,5 +1,8 @@
 export const INSTAGRAM_URL = "https://www.instagram.com/hooksnthreads_official/";
 
+/** The full catalogue on the main site; every "Browse catalogue" button opens it. */
+export const CATALOGUE_URL = "https://www.hooksnthreads.shop/catalogue";
+
 export interface Category {
   slug: string;
   name: string;

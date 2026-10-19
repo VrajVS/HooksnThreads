@@ -2,7 +2,7 @@ import { MessageCircle, Package, Palette } from "lucide-react";
 
 import { GradientButton } from "@/components/gradient-button";
 import { Button } from "@/components/ui/button";
-import { INSTAGRAM_URL } from "@/data/site-data";
+import { CATALOGUE_URL, INSTAGRAM_URL } from "@/data/site-data";
 
 const bullets = [
   { icon: Palette, text: "Choose your pieces and pick your colours" },
@@ -30,7 +30,7 @@ export function WeightLossSection() {
 
           <div className="mt-8 flex flex-wrap items-center gap-4">
             <Button asChild size="lg">
-              <a href="#products">Browse catalogue</a>
+              <a href={CATALOGUE_URL}>Browse catalogue</a>
             </Button>
             <GradientButton
               as="a"

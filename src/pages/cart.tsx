@@ -5,6 +5,7 @@ import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/context/cart-context";
+import { CATALOGUE_URL } from "@/data/site-data";
 
 export function CartPage() {
   const { items, removeItem, updateQuantity, subtotal } = useCart();
@@ -20,7 +21,7 @@ export function CartPage() {
             <ShoppingBag className="h-12 w-12 text-muted-foreground" strokeWidth={1.5} />
             <p className="text-lg font-medium">Your cart is empty</p>
             <Button asChild size="lg" className="mt-2">
-              <Link to="/#products">Browse Catalogue</Link>
+              <a href={CATALOGUE_URL}>Browse Catalogue</a>
             </Button>
           </div>
         ) : (

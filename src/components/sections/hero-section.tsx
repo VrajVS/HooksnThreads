@@ -1,7 +1,7 @@
 import { ArrowRight, Heart, Palette, Star, Truck } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { INSTAGRAM_URL, marqueeColumnA, marqueeColumnB } from "@/data/site-data";
+import { CATALOGUE_URL, INSTAGRAM_URL, marqueeColumnA, marqueeColumnB } from "@/data/site-data";
 
 const features = [
   { icon: Heart, text: "100% handcrafted, one stitch at a time" },
@@ -80,7 +80,7 @@ export function HeroSection() {
               </p>
             </div>
             <Button asChild size="lg">
-              <a href="#products">Browse Catalogue</a>
+              <a href={CATALOGUE_URL}>Browse Catalogue</a>
             </Button>
           </div>
 

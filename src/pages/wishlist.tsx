@@ -1,4 +1,3 @@
-import { Link } from "react-router-dom";
 import { Heart } from "lucide-react";
 
 import { Navbar } from "@/components/navbar";
@@ -7,6 +6,7 @@ import { ProductGrid } from "@/components/product-grid";
 import { Button } from "@/components/ui/button";
 import { useWishlist } from "@/context/wishlist-context";
 import { useProducts } from "@/hooks/use-products";
+import { CATALOGUE_URL } from "@/data/site-data";
 
 export function WishlistPage() {
   const { handles } = useWishlist();
@@ -26,7 +26,7 @@ export function WishlistPage() {
             <Heart className="h-12 w-12 text-muted-foreground" strokeWidth={1.5} />
             <p className="text-lg font-medium">Your wishlist is empty</p>
             <Button asChild size="lg" className="mt-2">
-              <Link to="/#products">Browse Catalogue</Link>
+              <a href={CATALOGUE_URL}>Browse Catalogue</a>
             </Button>
           </div>
         ) : (

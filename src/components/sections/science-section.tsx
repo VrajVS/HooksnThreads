@@ -2,7 +2,7 @@ import { Atom, FlaskConical, Leaf, Rabbit, TreePine, Wheat } from "lucide-react"
 
 import { GradientButton } from "@/components/gradient-button";
 import { Button } from "@/components/ui/button";
-import { INSTAGRAM_URL } from "@/data/site-data";
+import { CATALOGUE_URL, INSTAGRAM_URL } from "@/data/site-data";
 
 const badges = [
   { Icon: Rabbit, label: "100%\nHandcrafted" },
@@ -23,7 +23,7 @@ export function ScienceSection() {
           </h2>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
             <Button asChild size="lg">
-              <a href="#products">Browse catalogue</a>
+              <a href={CATALOGUE_URL}>Browse catalogue</a>
             </Button>
             <GradientButton
               as="a"
