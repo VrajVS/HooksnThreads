@@ -208,31 +208,30 @@ export function AdminLayout({ children }: { children: ReactNode }) {
               );
               return (
                 <div key={group.label}>
-                  <button
-                    onClick={() => toggleGroup(group.label)}
-                    aria-expanded={open}
-                    title={collapsed ? group.label : undefined}
-                    className={cn(
-                      "flex w-full items-center gap-2 rounded-2xl px-3 py-2.5 text-sm font-medium transition-colors",
-                      collapsed && "justify-center",
-                      groupActive
-                        ? "bg-[hsl(var(--admin-accent))] text-white"
-                        : "text-zinc-600 hover:bg-zinc-100",
-                    )}
-                  >
-                    <group.icon className="h-4 w-4 shrink-0" />
-                    {!collapsed && (
-                      <>
-                        <span className="flex-1 text-left">{group.label}</span>
-                        <ChevronDown
-                          className={cn(
-                            "h-4 w-4 shrink-0 transition-transform",
-                            open && "rotate-180",
-                          )}
-                        />
-                      </>
-                    )}
-                  </button>
+                  {/* Collapsed: no module row, just its pages' icons, with a divider between modules. */}
+                  {collapsed ? (
+                    <div aria-hidden className="mx-3 my-2 h-px bg-zinc-200" />
+                  ) : (
+                    <button
+                      onClick={() => toggleGroup(group.label)}
+                      aria-expanded={open}
+                      className={cn(
+                        "flex w-full items-center gap-2 rounded-2xl px-3 py-2.5 text-sm font-medium transition-colors",
+                        groupActive
+                          ? "bg-[hsl(var(--admin-accent))] text-white"
+                          : "text-zinc-600 hover:bg-zinc-100",
+                      )}
+                    >
+                      <group.icon className="h-4 w-4 shrink-0" />
+                      <span className="flex-1 text-left">{group.label}</span>
+                      <ChevronDown
+                        className={cn(
+                          "h-4 w-4 shrink-0 transition-transform",
+                          open && "rotate-180",
+                        )}
+                      />
+                    </button>
+                  )}
 
                   {open && !collapsed && (
                     <div className="mt-1 flex flex-col gap-1 pl-4">
@@ -269,7 +268,7 @@ export function AdminLayout({ children }: { children: ReactNode }) {
                           className={cn(
                             "mt-1 flex items-center justify-center rounded-2xl px-3 py-2.5 text-sm font-medium transition-colors",
                             active
-                              ? "bg-[hsl(var(--admin-accent-light))] text-[hsl(var(--admin-accent))]"
+                              ? "bg-[hsl(var(--admin-accent))] text-white"
                               : "text-zinc-600 hover:bg-zinc-100",
                           )}
                         >
