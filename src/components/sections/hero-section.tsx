@@ -43,7 +43,7 @@ function MarqueeColumn({
 
 export function HeroSection() {
   return (
-    <section className="container pb-16 pt-6 md:pb-24 md:pt-8">
+    <section className="container pb-8 pt-6 md:pb-12 md:pt-8">
       <div className="grid gap-12 lg:grid-cols-2 lg:gap-16">
         <div className="flex flex-col justify-center lg:justify-start">
           <div className="mb-6 inline-flex w-fit items-center gap-2 rounded-full bg-white px-4 py-2 shadow-[2px_4px_12px_rgba(0,0,0,0.08)]">

@@ -12,7 +12,7 @@ const bullets = [
 
 export function WeightLossSection() {
   return (
-    <section id="how-to-order" className="bg-background py-20">
+    <section id="how-to-order" className="bg-background py-10 md:py-14">
       <div className="container grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
         <div>
           <h2 className="display text-5xl md:text-6xl lg:text-7xl">
@@ -51,7 +51,7 @@ export function WeightLossSection() {
         <img
           src="/images/how-to-order.jpg"
           alt="Handmade crochet piece"
-          className="w-full rounded-2xl object-cover"
+          className="max-h-[30rem] w-full rounded-2xl object-cover lg:max-h-[34rem]"
         />
       </div>
     </section>

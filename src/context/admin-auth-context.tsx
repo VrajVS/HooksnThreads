@@ -34,8 +34,9 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const login = React.useCallback(async (email: string, password: string) => {
-    const result = await api.post<AdminUser>("/admin/auth/login", { email, password });
-    setAdmin(result);
+    await api.post("/admin/auth/login", { email, password });
+    // Load the full profile (role and permissions) the same way a page refresh does.
+    setAdmin(await api.get<AdminUser>("/admin/auth/me"));
   }, []);
 
   const logout = React.useCallback(async () => {

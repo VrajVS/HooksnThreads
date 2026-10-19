@@ -37,6 +37,26 @@ def list_products(
         return cur.fetchall()
 
 
+@router.get("/bestsellers")
+def bestsellers(limit: int = 8, conn: Connection = Depends(get_conn)):
+    """Catalogue products ranked by pieces sold. Only counts, never order or customer details."""
+    with conn.cursor(row_factory=dict_row) as cur:
+        cur.execute(
+            f"""
+            SELECT {', '.join(f'p.{c.strip()}' for c in SELECT_COLUMNS.split(','))},
+                   SUM(i.quantity) AS sold
+            FROM order_items i
+            JOIN orders o ON o.id = i.order_id AND o.status <> 'cancelled'
+            JOIN products p ON p.handle = i.product_handle
+            GROUP BY p.handle
+            ORDER BY sold DESC, p.title
+            LIMIT %s
+            """,
+            (min(max(limit, 1), 24),),
+        )
+        return cur.fetchall()
+
+
 @router.get("/{handle}")
 def get_product(handle: str, conn: Connection = Depends(get_conn)):
     with conn.cursor(row_factory=dict_row) as cur:

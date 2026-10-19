@@ -40,7 +40,8 @@ def admin_login(body: AdminLoginBody, response: Response, conn: Connection = Dep
     row = _check_credentials(conn, body)
     token = create_token(row[0], "admin")
     response.set_cookie(ADMIN_COOKIE_NAME, token, **COOKIE_KWARGS)
-    return {"id": row[0], "email": body.email, "full_name": row[2]}
+    # The full profile, same as /me: the admin panel needs the role and permissions straight away.
+    return _load_admin(conn, row[0])
 
 
 @router.post("/token")

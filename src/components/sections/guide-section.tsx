@@ -7,7 +7,7 @@ import { INSTAGRAM_URL, guides } from "@/data/site-data";
 
 export function GuideSection() {
   return (
-    <section className="bg-background py-28">
+    <section className="bg-background py-10 md:py-14">
       <div className="container">
         <div className="mx-auto flex max-w-2xl flex-col items-center text-center">
           <h2 className="display text-4xl md:text-5xl lg:text-6xl">
@@ -28,7 +28,7 @@ export function GuideSection() {
           </div>
         </div>
 
-        <div className="mt-16 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {guides.map((guide) => (
             <div
               key={guide.category}

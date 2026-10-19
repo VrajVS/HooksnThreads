@@ -7,12 +7,12 @@ import { useWishlist } from "@/context/wishlist-context";
 import type { Product } from "@/data/site-data";
 import { cn } from "@/lib/utils";
 
-export function ProductGrid({ products }: { products: Product[] }) {
+export function ProductGrid({ products, className }: { products: Product[]; className?: string }) {
   const { addItem } = useCart();
   const { isWishlisted, toggleWishlist } = useWishlist();
 
   return (
-    <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+    <div className={cn("grid gap-8 md:grid-cols-2 lg:grid-cols-3", className)}>
       {products.map((product) => {
         const wishlisted = isWishlisted(product.handle);
         return (

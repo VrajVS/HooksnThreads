@@ -47,6 +47,20 @@ export default {
         "brand-gold": "#b8975a",
         // Italic accent colour of the catalogue headings.
         "brand-sage": "#7a9582",
+        // New storefront (src/components/storefront), after the Anon ecommerce template.
+        anon: {
+          pink: "#ff8f9c",
+          black: "#212121",
+          onyx: "#454545",
+          gray: "#787878",
+          silver: "#999999",
+          cultured: "#ededed",
+          sandy: "#f5a15a",
+          green: "#3cb878",
+        },
+      },
+      fontFamily: {
+        poppins: ['"Poppins"', "system-ui", "sans-serif"],
       },
       borderRadius: {
         lg: "var(--radius)",

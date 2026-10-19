@@ -1,7 +1,9 @@
 import { useEffect } from "react";
 import { Route, Routes, useLocation } from "react-router-dom";
 
+import { STOREFRONT } from "@/config/storefront";
 import { Home } from "@/pages/home";
+import { StorefrontHome } from "@/pages/home-anon";
 import { ProductPage } from "@/pages/product";
 import { ProductsPage } from "@/pages/products";
 import { CategoryPage } from "@/pages/category";
@@ -63,7 +65,9 @@ function App() {
       <ScrollManager />
       <VerificationBanner />
       <Routes>
-        <Route path="/" element={<Home />} />
+        <Route path="/" element={STOREFRONT === "anon" ? <StorefrontHome /> : <Home />} />
+        <Route path="/home/new" element={<StorefrontHome />} />
+        <Route path="/home/classic" element={<Home />} />
         <Route path="/product/:handle" element={<ProductPage />} />
         <Route path="/products" element={<ProductsPage />} />
         <Route path="/compare" element={<ComparePage />} />

@@ -13,7 +13,7 @@ const socialIcons = [{ Icon: InstagramIcon, label: "Instagram", href: INSTAGRAM_
 
 export function Footer() {
   return (
-    <footer className="bg-brand-navy py-16 text-white">
+    <footer className="bg-brand-navy py-10 text-white">
       <div className="container">
         <div className="grid gap-12 lg:grid-cols-2">
           <div>
@@ -70,7 +70,7 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="mt-16 border-t border-white/10 pt-8">
+        <div className="mt-10 border-t border-white/10 pt-6">
           <div className="flex flex-wrap items-center justify-between gap-8">
             <div className="flex items-center gap-5">
               {socialIcons.map(({ Icon, label, href }) => (

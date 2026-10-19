@@ -15,7 +15,7 @@ const badges = [
 
 export function ScienceSection() {
   return (
-    <section id="about" className="bg-background py-28">
+    <section id="about" className="bg-background py-10 md:py-14">
       <div className="container">
         <div className="mx-auto flex max-w-2xl flex-col items-center text-center">
           <h2 className="display text-4xl md:text-5xl lg:text-6xl">
@@ -36,13 +36,13 @@ export function ScienceSection() {
           </div>
         </div>
 
-        <div className="mt-16 grid grid-cols-2 gap-6 md:grid-cols-3 lg:grid-cols-6">
+        <div className="mt-8 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
           {badges.map((badge) => (
             <div
               key={badge.label}
-              className="flex flex-col items-center gap-4 rounded-2xl bg-white p-8 text-center shadow-[2px_4px_12px_rgba(0,0,0,0.08)]"
+              className="flex flex-col items-center gap-4 rounded-2xl bg-white p-5 text-center shadow-[2px_4px_12px_rgba(0,0,0,0.08)]"
             >
-              <badge.Icon className="h-20 w-20" strokeWidth={1.5} />
+              <badge.Icon className="h-12 w-12" strokeWidth={1.5} />
               <p className="whitespace-pre-line text-sm font-medium">
                 {badge.label}
               </p>
