@@ -1122,7 +1122,7 @@ function Pagination({
   onPageChange: (n: number) => void;
 }) {
   return (
-    <div className="mt-10 flex items-center justify-center gap-2">
+    <nav aria-label="Pages" className="mt-10 flex flex-wrap items-center justify-center gap-2">
       <button
         onClick={() => onPageChange(page - 1)}
         disabled={page <= 1}
@@ -1130,9 +1130,28 @@ function Pagination({
       >
         Previous
       </button>
-      <span className="px-3 text-sm text-muted-foreground">
-        Page {page} of {totalPages}
-      </span>
+      {pageNumbers(page, totalPages).map((n, i) =>
+        n === null ? (
+          <span key={`gap-${i}`} aria-hidden className="px-1 text-sm text-muted-foreground">
+            …
+          </span>
+        ) : (
+          <button
+            key={n}
+            onClick={() => onPageChange(n)}
+            aria-label={`Page ${n}`}
+            aria-current={n === page ? "page" : undefined}
+            className={cn(
+              "inline-flex h-10 min-w-10 items-center justify-center rounded-full border px-3 text-sm font-medium tabular-nums transition-colors",
+              n === page
+                ? "border-brand-navy bg-brand-navy text-white"
+                : "border-border bg-white hover:border-brand-navy/40",
+            )}
+          >
+            {n}
+          </button>
+        ),
+      )}
       <button
         onClick={() => onPageChange(page + 1)}
         disabled={page >= totalPages}
@@ -1140,6 +1159,21 @@ function Pagination({
       >
         Next
       </button>
-    </div>
+    </nav>
   );
+}
+
+/** 1 … 4 5 6 … 11: first, last and the pages either side of the current one. */
+function pageNumbers(page: number, total: number): (number | null)[] {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+  const shown = new Set([1, total, page - 1, page, page + 1]);
+  if (page <= 3) [2, 3, 4].forEach((n) => shown.add(n));
+  if (page >= total - 2) [total - 3, total - 2, total - 1].forEach((n) => shown.add(n));
+  const sorted = [...shown].filter((n) => n >= 1 && n <= total).sort((a, b) => a - b);
+  const out: (number | null)[] = [];
+  sorted.forEach((n, i) => {
+    if (i > 0 && n - sorted[i - 1] > 1) out.push(n - sorted[i - 1] === 2 ? n - 1 : null);
+    out.push(n);
+  });
+  return out;
 }
