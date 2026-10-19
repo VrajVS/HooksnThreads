@@ -1,3 +1,5 @@
+import os
+
 from fastapi import APIRouter, Depends, HTTPException
 from psycopg import Connection
 from psycopg.rows import dict_row
@@ -123,6 +125,8 @@ def create_razorpay_order_endpoint(
             "razorpay_order_id": razorpay_order["id"],
             "amount": razorpay_order["amount"],
             "currency": razorpay_order["currency"],
+            # Public key id, so the checkout always matches the server's (test or live) keys.
+            "key_id": os.getenv("RAZORPAY_KEY_ID"),
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to create Razorpay order: {str(e)}")

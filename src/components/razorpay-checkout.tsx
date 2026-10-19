@@ -29,7 +29,7 @@ export function RazorpayCheckout({ items, addressId, notes, total, email, phone,
     setLoading(true);
     try {
       // Create Razorpay order
-      const razorpayOrder = await api.post<{ razorpay_order_id: string; amount: number }>(
+      const razorpayOrder = await api.post<{ razorpay_order_id: string; amount: number; key_id: string }>(
         "/orders/razorpay-order",
         {
           address_id: addressId,
@@ -43,7 +43,7 @@ export function RazorpayCheckout({ items, addressId, notes, total, email, phone,
       script.src = "https://checkout.razorpay.com/v1/checkout.js";
       script.onload = () => {
         const options = {
-          key: "rzp_test_ToYyw75NtlLxDR", // Will be set via env variable later
+          key: razorpayOrder.key_id,
           amount: razorpayOrder.amount,
           currency: "INR",
           order_id: razorpayOrder.razorpay_order_id,
